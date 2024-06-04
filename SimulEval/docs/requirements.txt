@@ -1,0 +1,2 @@
+sphinx-argparse==0.4.0
+-e .

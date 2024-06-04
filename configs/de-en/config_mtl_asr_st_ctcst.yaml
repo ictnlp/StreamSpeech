@@ -1,0 +1,36 @@
+target_unigram:
+   decoder_type: transformer
+   dict: /data/zhangshaolei/StreamSpeech/configs/de-en/tgt_unigram6000/spm_unigram_de.txt
+   data: /data/zhangshaolei/StreamSpeech/configs/de-en/tgt_unigram6000
+   loss_weight: 8.0
+   rdrop_alpha: 0.0
+   decoder_args:
+      decoder_layers: 4
+      decoder_embed_dim: 512
+      decoder_ffn_embed_dim: 2048
+      decoder_attention_heads: 8
+   label_smoothing: 0.1
+source_unigram:
+   decoder_type: ctc
+   dict: /data/zhangshaolei/StreamSpeech/configs/de-en/src_unigram6000/spm_unigram_de.txt
+   data: /data/zhangshaolei/StreamSpeech/configs/de-en/src_unigram6000
+   loss_weight: 4.0
+   rdrop_alpha: 0.0
+   decoder_args:
+      decoder_layers: 0
+      decoder_embed_dim: 512
+      decoder_ffn_embed_dim: 2048
+      decoder_attention_heads: 8
+   label_smoothing: 0.1
+ctc_target_unigram:
+   decoder_type: ctc
+   dict: /data/zhangshaolei/StreamSpeech/configs/de-en/tgt_unigram6000/spm_unigram_de.txt
+   data: /data/zhangshaolei/StreamSpeech/configs/de-en/tgt_unigram6000
+   loss_weight: 4.0
+   rdrop_alpha: 0.0
+   decoder_args:
+      decoder_layers: 0
+      decoder_embed_dim: 512
+      decoder_ffn_embed_dim: 2048
+      decoder_attention_heads: 8
+   label_smoothing: 0.1

@@ -1,0 +1,12 @@
+target_unigram:
+   decoder_type: transformer
+   dict: /data/zhangshaolei/StreamSpeech/configs/es-en/tgt_unigram6000/spm_unigram_es.txt
+   data: /data/zhangshaolei/StreamSpeech/configs/es-en/tgt_unigram6000
+   loss_weight: 8.0
+   rdrop_alpha: 0.0
+   decoder_args:
+      decoder_layers: 4
+      decoder_embed_dim: 512
+      decoder_ffn_embed_dim: 2048
+      decoder_attention_heads: 8
+   label_smoothing: 0.1
