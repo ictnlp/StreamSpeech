@@ -493,6 +493,7 @@ class TransformerDecoderLayerBase(nn.Module):
                 incremental_state is not None
                 and self.encoder_attn._get_input_buffer(incremental_state) != {}
             ):
+                prev_key_length=self.encoder_attn._get_input_buffer(incremental_state)['prev_key'].size(-2)
 
                 if encoder_out.size(0) > prev_key_length:
                     encoder_out = encoder_out[prev_key_length:]

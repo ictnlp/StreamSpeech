@@ -1,4 +1,4 @@
-export CUDA_VISIBLE_DEVICES=7
+export CUDA_VISIBLE_DEVICES=0
 
 ROOT=/data/zhangshaolei/StreamSpeech
 DATA_ROOT=/data/zhangshaolei/datasets/cvss/cvss-c
@@ -9,30 +9,23 @@ VOCODER_CFG=$PRETRAIN_ROOT/unit-based_HiFi-GAN_vocoder/mHuBERT.layer11.km1000.en
 LANG=fr
 DATA=${DATA_ROOT}/${LANG}-en/fbank2unit
 SPLIT=test
-BEAM=1
+BEAM=10
 
-file=/data/zhangshaolei/StreamSpeech_model/streamspeech.offline.${LANG}-en.pt
-# file=/data/zhangshaolei/StreamSpeech_model/unity.${LANG}-en.pt
+file=/data/zhangshaolei/StreamSpeech_model/unity.${LANG}-en.pt
 
 mkdir res
-output_dir=res/streamspeech.offline.${LANG}-en
+output_dir=res/unity.${LANG}-en
 mkdir -p $output_dir
 
 PYTHONPATH=$ROOT/fairseq fairseq-generate ${DATA} \
-    --user-dir reasearchs/ctc_unity \
-    --config-yaml config_gcmvn.yaml --multitask-config-yaml config_unity_asr_st_ctcst.yaml \
-    --task speech_to_speech_ctc --target-is-code --target-code-size 1000 --vocoder code_hifigan \
+    --user-dir researches/translatotron \
+    --config-yaml config_gcmvn.yaml --multitask-config-yaml config_unity.yaml \
+    --task speech_to_speech_modified --target-is-code --target-code-size 1000 --vocoder code_hifigan \
     --path $file --gen-subset $SPLIT \
     --beam-mt $BEAM --beam 1 --max-len-a 1 \
     --max-tokens 10000 \
     --required-batch-size-multiple 1 \
     --results-path $output_dir > $output_dir/generate-$SPLIT.log 2>&1
-
-grep '^A-' $output_dir/generate-$SPLIT.log | sort -t'-' -k2,2n | cut -f2 > $output_dir/generate-$SPLIT.asr
-
-echo '################### ASR source text BLEU ###################' >> $output_dir/res.txt
-sacrebleu $DATA/$SPLIT.src -i $output_dir/generate-$SPLIT.asr -w 3 >> $output_dir/res.txt
-wer $DATA/$SPLIT.src $output_dir/generate-$SPLIT.asr >> $output_dir/res.txt
 
 grep '^D-' $output_dir/generate-$SPLIT.log | sort -t'-' -k2,2n | cut -f2 > $output_dir/generate-$SPLIT.tgt
 

@@ -1,4 +1,4 @@
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=7
 
 ROOT=/data/zhangshaolei/StreamSpeech
 DATA_ROOT=/data/zhangshaolei/datasets/cvss/cvss-c
@@ -18,8 +18,8 @@ output_dir=res/unity.${LANG}-en
 mkdir -p $output_dir
 
 PYTHONPATH=$ROOT/fairseq fairseq-generate ${DATA} \
-    --user-dir reasearchs/uni_unity \
-    --config-yaml config_gcmvn.yaml --multitask-config-yaml config_unity_asr_st.yaml \
+    --user-dir researches/translatotron \
+    --config-yaml config_gcmvn.yaml --multitask-config-yaml config_unity.yaml \
     --task speech_to_speech_modified --target-is-code --target-code-size 1000 --vocoder code_hifigan \
     --path $file --gen-subset $SPLIT \
     --beam-mt $BEAM --beam 1 --max-len-a 1 \
@@ -55,4 +55,3 @@ cd ..
 
 echo '################### Speech-to-speech target speech ASR-BLEU ###################' >> $output_dir/res.txt
 tail -n 1 $output_dir/asr_bleu.log >> $output_dir/res.txt
-

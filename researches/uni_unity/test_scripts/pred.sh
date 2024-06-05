@@ -18,7 +18,7 @@ output_dir=res/unity.${LANG}-en
 mkdir -p $output_dir
 
 PYTHONPATH=$ROOT/fairseq fairseq-generate ${DATA} \
-    --user-dir reasearchs/translatotron \
+    --user-dir researches/uni_unity \
     --config-yaml config_gcmvn.yaml --multitask-config-yaml config_unity.yaml \
     --task speech_to_speech_modified --target-is-code --target-code-size 1000 --vocoder code_hifigan \
     --path $file --gen-subset $SPLIT \
@@ -55,3 +55,4 @@ cd ..
 
 echo '################### Speech-to-speech target speech ASR-BLEU ###################' >> $output_dir/res.txt
 tail -n 1 $output_dir/asr_bleu.log >> $output_dir/res.txt
+

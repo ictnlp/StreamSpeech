@@ -125,6 +125,7 @@ class StreamSpeechS2TTAgent(SpeechToTextAgent):
         tgt_dict = self.dict["tgt"]
         tgt_dict_asr = self.dict["source_unigram"]
         tgt_dict_st = self.dict["ctc_target_unigram"]
+        args.user_dir=args.agent_dir
         utils.import_user_module(args)
         from agent.sequence_generator import SequenceGenerator
         from agent.ctc_generator import CTCSequenceGenerator
@@ -233,8 +234,14 @@ class StreamSpeechS2TTAgent(SpeechToTextAgent):
         parser.add_argument(
             "--user-dir",
             type=str,
-            default="examples/simultaneous_translation",
-            help="User directory for simultaneous translation",
+            default="researches/ctc_unity",
+            help="User directory for model",
+        )
+        parser.add_argument(
+            "--agent-dir",
+            type=str,
+            default="agent",
+            help="User directory for agents",
         )
         parser.add_argument(
             "--max-len", type=int, default=200, help="Max length of translation"
@@ -313,6 +320,7 @@ class StreamSpeechS2TTAgent(SpeechToTextAgent):
             raise IOError("Model file not found: {}".format(filename))
 
         state = checkpoint_utils.load_checkpoint_to_cpu(filename)
+        state["cfg"].common['user_dir']=args.user_dir
         utils.import_user_module(state["cfg"].common)
 
         task_args = state["cfg"]["task"]

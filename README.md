@@ -89,7 +89,7 @@ output_dir=$ROOT/res/streamspeech.simultaneous.${LANG}-en/simul-s2st
 
 chunk_size=320 #ms
 PYTHONPATH=$ROOT/fairseq simuleval --data-bin ${ROOT}/configs/${LANG}-en \
-    --user-dir ${ROOT}/agent \
+    --user-dir ${ROOT}/researches/ctc_unity --agent-dir ${ROOT}/agent \
     --source example/wav_list.txt --target example/target.txt \
     --model-path $file \
     --config-yaml config_gcmvn.yaml --multitask-config-yaml config_mtl_asr_st_ctcst.yaml \
@@ -117,7 +117,7 @@ output_dir=$ROOT/res/streamspeech.simultaneous.${LANG}-en/simul-s2tt
 
 chunk_size=320 #ms
 PYTHONPATH=$ROOT/fairseq simuleval --data-bin ${ROOT}/configs/${LANG}-en \
-    --user-dir ${ROOT}/agent \
+    --user-dir ${ROOT}/researches/ctc_unity --agent-dir ${ROOT}/agent \
     --source example/wav_list.txt --target example/target.txt \
     --model-path $file \
     --config-yaml config_gcmvn.yaml --multitask-config-yaml config_mtl_asr_st_ctcst.yaml \
@@ -143,7 +143,7 @@ output_dir=$ROOT/res/streamspeech.simultaneous.${LANG}-en/streaming-asr
 
 chunk_size=320 #ms
 PYTHONPATH=$ROOT/fairseq simuleval --data-bin ${ROOT}/configs/${LANG}-en \
-    --user-dir ${ROOT}/agent \
+    --user-dir ${ROOT}/researches/ctc_unity --agent-dir ${ROOT}/agent \
     --source example/wav_list.txt --target example/source.txt \
     --model-path $file \
     --config-yaml config_gcmvn.yaml --multitask-config-yaml config_mtl_asr_st_ctcst.yaml \
@@ -170,19 +170,19 @@ PYTHONPATH=$ROOT/fairseq simuleval --data-bin ${ROOT}/configs/${LANG}-en \
 <img src="./assets/model.png" alt="model" style="width: 100%; min-width: 300px; display: block; margin: auto;">
 </p>
 
-- Follow [`reasearchs/ctc_unity/train_scripts/train.simul-s2st.sh`](./reasearchs/ctc_unity/train_scripts/train.simul-s2st.sh) to train StreamSpeech for simultaneous speech-to-speech translation.
-- Follow [`reasearchs/ctc_unity/train_scripts/train.offline-s2st.sh`](./reasearchs/ctc_unity/train_scripts/train.offline-s2st.sh) to train StreamSpeech for offline speech-to-speech translation.
+- Follow [`researches/ctc_unity/train_scripts/train.simul-s2st.sh`](./researches/ctc_unity/train_scripts/train.simul-s2st.sh) to train StreamSpeech for simultaneous speech-to-speech translation.
+- Follow [`researches/ctc_unity/train_scripts/train.offline-s2st.sh`](./researches/ctc_unity/train_scripts/train.offline-s2st.sh) to train StreamSpeech for offline speech-to-speech translation.
 - We also provide some other StreamSpeech variants and baseline implementations.
 
 | Model             | --user-dir                 | --arch                            | Description                                                  |
 | ----------------- | -------------------------- | --------------------------------- | ------------------------------------------------------------ |
-| **Translatotron 2** | `reasearchs/translatotron` | `s2spect2_conformer_modified`     | [Translatotron 2](https://proceedings.mlr.press/v162/jia22b.html) |
-| **UnitY**         | `reasearchs/translatotron` | `unity_conformer_modified`        | [UnitY](https://aclanthology.org/2023.acl-long.872/)         |
-| **Uni-UnitY**     | `reasearchs/uni_unity`     | `uni_unity_conformer`             | Change all encoders in UnitY into unidirectional             |
-| **Chunk-UnitY**   | `reasearchs/chunk_unity`   | `chunk_unity_conformer`           | Change the Conformer in UnitY into Chunk-based Conformer     |
-| **StreamSpeech**  | `reasearchs/ctc_unity`     | `streamspeech`                    | StreamSpeech                                                 |
-| **HMT**           | `reasearchs/hmt`           | `hmt_transformer_iwslt_de_en`     | [HMT](https://openreview.net/forum?id=9y0HFvaAYD6): strong simultaneous text-to-text translation method |
-| **DiSeg**         | `reasearchs/diseg`         | `convtransformer_espnet_base_seg` | [DiSeg](https://aclanthology.org/2023.findings-acl.485/): strong simultaneous speech-to-text translation method |
+| **Translatotron 2** | `researches/translatotron` | `s2spect2_conformer_modified`     | [Translatotron 2](https://proceedings.mlr.press/v162/jia22b.html) |
+| **UnitY**         | `researches/translatotron` | `unity_conformer_modified`        | [UnitY](https://aclanthology.org/2023.acl-long.872/)         |
+| **Uni-UnitY**     | `researches/uni_unity`     | `uni_unity_conformer`             | Change all encoders in UnitY into unidirectional             |
+| **Chunk-UnitY**   | `researches/chunk_unity`   | `chunk_unity_conformer`           | Change the Conformer in UnitY into Chunk-based Conformer     |
+| **StreamSpeech**  | `researches/ctc_unity`     | `streamspeech`                    | StreamSpeech                                                 |
+| **HMT**           | `researches/hmt`           | `hmt_transformer_iwslt_de_en`     | [HMT](https://openreview.net/forum?id=9y0HFvaAYD6): strong simultaneous text-to-text translation method |
+| **DiSeg**         | `researches/diseg`         | `convtransformer_espnet_base_seg` | [DiSeg](https://aclanthology.org/2023.findings-acl.485/): strong simultaneous speech-to-text translation method |
 
 > [!Tip]
 > The `train_scripts/` and `test_scripts/` in directory `--user-dir` give the training and testing scripts for each model.
@@ -192,7 +192,7 @@ PYTHONPATH=$ROOT/fairseq simuleval --data-bin ${ROOT}/configs/${LANG}-en \
 
 #### (1) Offline Evaluation
 
-Follow [`pred.offline-s2st.sh`](./reasearchs/ctc_unity/test_scripts/pred.offline-s2st.sh) to evaluate the offline performance of StreamSpeech on ASR, S2TT and S2ST.
+Follow [`pred.offline-s2st.sh`](./researches/ctc_unity/test_scripts/pred.offline-s2st.sh) to evaluate the offline performance of StreamSpeech on ASR, S2TT and S2ST.
 
 #### (2) Simultaneous Evaluation
 
@@ -202,7 +202,7 @@ A trained StreamSpeech model can be used for streaming ASR, simultaneous speech-
 - `agent/speech_to_text.s2tt.streamspeech.agent.py`: simultaneous speech-to-text translation
 - `agent/speech_to_text.asr.streamspeech.agent.py`: streaming ASR
 
-Follow [`simuleval.simul-s2st.sh`](./reasearchs/ctc_unity/test_scripts/simuleval.simul-s2st.sh), [`simuleval.simul-s2tt.sh`](./reasearchs/ctc_unity/test_scripts/simuleval.simul-s2tt.sh), [`simuleval.streaming-asr.sh`](./reasearchs/ctc_unity/test_scripts/simuleval.streaming-asr.sh)  to evaluate StreamSpeech.
+Follow [`simuleval.simul-s2st.sh`](./researches/ctc_unity/test_scripts/simuleval.simul-s2st.sh), [`simuleval.simul-s2tt.sh`](./researches/ctc_unity/test_scripts/simuleval.simul-s2tt.sh), [`simuleval.streaming-asr.sh`](./researches/ctc_unity/test_scripts/simuleval.streaming-asr.sh)  to evaluate StreamSpeech.
 
 ### 4. Our Results
 

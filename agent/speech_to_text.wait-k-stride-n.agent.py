@@ -122,6 +122,7 @@ class EnglishSpeechCounter(SpeechToTextAgent):
 
         tgt_dict_mt = self.dict[f"{self.models[0].mt_task_name}"]
         tgt_dict = self.dict["tgt"]
+        args.user_dir=args.agent_dir
         utils.import_user_module(args)
         from agent.sequence_generator import SequenceGenerator
 
@@ -222,8 +223,14 @@ class EnglishSpeechCounter(SpeechToTextAgent):
         parser.add_argument(
             "--user-dir",
             type=str,
-            default="examples/simultaneous_translation",
-            help="User directory for simultaneous translation",
+            default="researches/ctc_unity",
+            help="User directory for model",
+        )
+        parser.add_argument(
+            "--agent-dir",
+            type=str,
+            default="agent",
+            help="User directory for agents",
         )
         parser.add_argument(
             "--max-len", type=int, default=200, help="Max length of translation"
@@ -301,6 +308,7 @@ class EnglishSpeechCounter(SpeechToTextAgent):
             raise IOError("Model file not found: {}".format(filename))
 
         state = checkpoint_utils.load_checkpoint_to_cpu(filename)
+        state["cfg"].common['user_dir']=args.user_dir
         utils.import_user_module(state["cfg"].common)
 
         task_args = state["cfg"]["task"]
