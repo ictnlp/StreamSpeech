@@ -173,6 +173,23 @@ Transcribing predictions: 100%|████████████████�
 
 ```
 
+Logs and evaluation results are stored in ` $output_dir/chunk_size=$chunk_size`:
+
+```
+$output_dir/chunk_size=$chunk_size
+├── wavs/
+│   ├── 0_pred.wav # generated speech
+│   ├── 1_pred.wav 
+│   ├── 0_pred.txt # asr transcription for ASR-BLEU tookit
+│   ├── 1_pred.txt 
+├── config.yaml
+├── asr_transcripts.txt # ASR-BLEU transcription results
+├── metrics.tsv
+├── scores.tsv
+├── asr_cmd.bash
+└── instances.log # logs of Simul-S2ST
+```
+
 </details>
 
 <details>
