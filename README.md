@@ -39,9 +39,8 @@ Code for ACL 2024 paper "[StreamSpeech: Simultaneous Speech-to-Speech Translatio
 | ----------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | **Speech Recognition**                          | jai donc expérience des années passé jen dirairai un mot tout à lheure | jai donc lexpérience des années passé jen dirairai un mot tout à lheure |
 | **Speech-to-Text Translation**                  | i therefore have an experience of last years i will tell a word later | so i have the experience in the past years i'll say a word later |
-| **Speech-to-Speech Translation**                | <video src='https://github.com/zhangshaolei1998/StreamSpeech_dev/assets/34680227/ed41ba13-353b-489b-acfa-85563d0cc2cb' width="30%"/>                          | <video src='https://github.com/zhangshaolei1998/StreamSpeech_dev/assets/34680227/ca482ba6-76da-4619-9dfd-24aa2eb3339a' width="30%"/>                          |
-| **Text-to-Speech Synthesis (in cascased StreamSpeech)** | <video src='https://github.com/zhangshaolei1998/StreamSpeech_dev/assets/34680227/294f1310-eace-4914-be30-5cd798e8592e' width="30%"/>                          | <video src='https://github.com/zhangshaolei1998/StreamSpeech_dev/assets/34680227/52854163-7fc5-4622-a5a6-c133cbd99e58' width="30%"/>                          |
-
+| **Speech-to-Speech Translation**                | <video src='https://github.com/ictnlp/StreamSpeech/assets/34680227/a7ea7bc5-ce60-47f4-9872-044ccebb7da4' width="30%"/>                          | <video src='https://github.com/ictnlp/StreamSpeech/assets/34680227/b04de1a7-1fc1-4a1c-9883-7336fb483182' width="30%"/>                          |
+| **Text-to-Speech Synthesis (in cascased StreamSpeech)** | <video src='https://github.com/ictnlp/StreamSpeech/assets/34680227/8826ee15-da5b-44ae-aa5a-2d80502182d2' width="30%"/>                          | <video src='https://github.com/ictnlp/StreamSpeech/assets/34680227/7361bd33-709a-49bd-b050-89b24212f815' width="30%"/>                          |
 
 
 ## ⚙Requirements
