@@ -1,13 +1,13 @@
 # StreamSpeech
 
-[![arXiv](https://img.shields.io/badge/arXiv-XXXX.XXXX-b31b1b.svg?logo=arXiv)]()
+[![arXiv](https://img.shields.io/badge/arXiv-2406.03049-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2406.03049)
 [![project](https://img.shields.io/badge/%F0%9F%8E%A7%20Demo-Listen%20to%20StreamSpeech-orange.svg)](https://ictnlp.github.io/StreamSpeech-site/)
 [![model](https://img.shields.io/badge/%F0%9F%A4%97%20-StreamSpeech_Models-blue.svg)](https://huggingface.co/ICTNLP/StreamSpeech_Models/tree/main)
 
 > **[Shaolei Zhang](https://zhangshaolei1998.github.io/), [Qingkai Fang](https://fangqingkai.github.io/), [Shoutao Guo](https://scholar.google.com.hk/citations?user=XwHtPyAAAAAJ&hl), [Zhengrui Ma](https://scholar.google.com.hk/citations?user=dUgq6tEAAAAJ), [Min Zhang](https://scholar.google.com.hk/citations?user=CncXH-YAAAAJ), [Yang Feng*](https://people.ucas.edu.cn/~yangfeng?language=en)**
 
 
-Code for ACL 2024 paper "[StreamSpeech: Simultaneous Speech-to-Speech Translation with Multi-task Learning]()" (paper coming soon).
+Code for ACL 2024 paper "[StreamSpeech: Simultaneous Speech-to-Speech Translation with Multi-task Learning](https://arxiv.org/pdf/2406.03049)".
 
 <p align="center" width="100%">
 <img src="./assets/streamspeech.png" alt="StreamSpeech" style="width: 70%; min-width: 300px; display: block; margin: auto;">
@@ -59,7 +59,7 @@ Replace `/data/zhangshaolei/StreamSpeech` in files [configs/fr-en/config_gcmvn.y
 
 #### (2) Test Data
 
-Prepare test data following [SimulEval](https://github.com/facebookresearch/SimulEval) format. [./example](./example) provides an example:
+Prepare test data following [SimulEval](https://github.com/facebookresearch/SimulEval) format. [./example/](./example) provides an example:
 
 - [wav_list.txt](./example/wav_list.txt): Each line records the path of a source speech.
 - [target.txt](./example/target.txt): Each line records the reference text, e.g., target translation or source transcription (used to calculate the metrics).
@@ -101,6 +101,78 @@ PYTHONPATH=$ROOT/fairseq simuleval --data-bin ${ROOT}/configs/${LANG}-en \
     --device gpu --computation-aware \
     --output-asr-translation True
 ```
+
+You should get the following outputs:
+
+```
+fairseq plugins loaded...
+fairseq plugins loaded...
+fairseq plugins loaded...
+fairseq plugins loaded...
+2024-06-06 09:45:46 | INFO     | fairseq.tasks.speech_to_speech | dictionary size: 1,004
+import agents...
+Removing weight norm...
+2024-06-06 09:45:50 | INFO     | agent.tts.vocoder | loaded CodeHiFiGAN checkpoint from /data/zhangshaolei/pretrain_models/unit-based_HiFi-GAN_vocoder/mHuBERT.layer11.km1000.en/g_00500000
+2024-06-06 09:45:50 | INFO     | simuleval.utils.agent | System will run on device: gpu.
+2024-06-06 09:45:50 | INFO     | simuleval.dataloader | Evaluating from speech to speech.
+  0%|                                                                                                                                                                              | 0/2 [00:00<?, ?it/s]
+Streaming ASR: 
+Streaming ASR: 
+Streaming ASR: je
+Simultaneous translation: i would
+Streaming ASR: je voudrais
+Simultaneous translation: i would like to
+Streaming ASR: je voudrais soumettre
+Simultaneous translation: i would like to sub
+Streaming ASR: je voudrais soumettre cette
+Simultaneous translation: i would like to submit
+Streaming ASR: je voudrais soumettre cette idée
+Simultaneous translation: i would like to submit this
+Streaming ASR: je voudrais soumettre cette idée à la
+Simultaneous translation: i would like to submit this idea to
+Streaming ASR: je voudrais soumettre cette idée à la réflexion
+Simultaneous translation: i would like to submit this idea to the
+Streaming ASR: je voudrais soumettre cette idée à la réflexion de
+Simultaneous translation: i would like to submit this idea to the reflection
+Streaming ASR: je voudrais soumettre cette idée à la réflexion de lassemblée
+Simultaneous translation: i would like to submit this idea to the reflection of
+Streaming ASR: je voudrais soumettre cette idée à la réflexion de lassemblée nationale
+Simultaneous translation: i would like to submit this idea to the reflection of the
+Streaming ASR: je voudrais soumettre cette idée à la réflexion de lassemblée nationale
+Simultaneous translation: i would like to submit this idea to the reflection of the national assembly
+ 50%|███████████████████████████████████████████████████████████████████████████████████                                                                                   | 1/2 [00:04<00:04,  4.08s/it]
+Streaming ASR: 
+Streaming ASR: 
+Streaming ASR: 
+Streaming ASR: 
+Streaming ASR: jai donc
+Simultaneous translation: i therefore
+Streaming ASR: jai donc
+Streaming ASR: jai donc expérience des
+Simultaneous translation: i therefore have an experience
+Streaming ASR: jai donc expérience des années
+Streaming ASR: jai donc expérience des années passé
+Simultaneous translation: i therefore have an experience of last
+Streaming ASR: jai donc expérience des années passé jen
+Simultaneous translation: i therefore have an experience of last years
+Streaming ASR: jai donc expérience des années passé jen dirairai
+Simultaneous translation: i therefore have an experience of last years i will
+Streaming ASR: jai donc expérience des années passé jen dirairai un mot
+Simultaneous translation: i therefore have an experience of last years i will tell a
+Streaming ASR: jai donc expérience des années passé jen dirairai un mot tout à lheure
+Simultaneous translation: i therefore have an experience of last years i will tell a word
+Streaming ASR: jai donc expérience des années passé jen dirairai un mot tout à lheure
+Simultaneous translation: i therefore have an experience of last years i will tell a word later
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:06<00:00,  3.02s/it]
+2024-06-06 09:45:56 | WARNING  | simuleval.scorer.asr_bleu | Beta feature: Evaluating speech output. Faieseq is required.
+2024-06-06 09:46:12 | INFO | fairseq.tasks.audio_finetuning | Using dict_path : /data/zhangshaolei/.cache/ust_asr/en/dict.ltr.txt
+Transcribing predictions: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:01<00:00,  1.63it/s]
+2024-06-06 09:46:21 | INFO     | simuleval.sentence_level_evaluator | Results:
+ ASR_BLEU       AL    AL_CA    AP  AP_CA      DAL  DAL_CA  StartOffset  StartOffset_CA  EndOffset  EndOffset_CA     LAAL  LAAL_CA      ATD   ATD_CA  NumChunks  NumChunks_CA  DiscontinuitySum  DiscontinuitySum_CA  DiscontinuityAve  DiscontinuityAve_CA  DiscontinuityNum  DiscontinuityNum_CA   RTF  RTF_CA
+   15.448 1724.895 2913.508 0.425  0.776 1358.812 3137.55       1280.0        2213.906     1366.0        1366.0 1724.895 2913.508 1440.146 3389.374        9.5           9.5             110.0                110.0              55.0                 55.0                 1                    1 1.326   1.326
+
+```
+
 </details>
 
 <details>
@@ -240,15 +312,10 @@ If our work is useful for you, please cite as:
 
 ```
 @inproceedings{streamspeech,
-    title = "StreamSpeech: Simultaneous Speech-to-Speech Translation with Multi-task Learning",
-    author = " Zhang, Shaolei and
-      Fang, QingKai and 
-      Guo, Shoutao  and
-      Ma, Zhengrui  and
-      Zhang, Min  and
-      Feng, Yang",
-    booktitle = "Proceedings of the 62th Annual Meeting of the Association for Computational Linguistics (Long Papers)",
-    year = "2024",
-    publisher = "Association for Computational Linguistics"
+      title={StreamSpeech: Simultaneous Speech-to-Speech Translation with Multi-task Learning}, 
+      author={Shaolei Zhang and Qingkai Fang and Shoutao Guo and Zhengrui Ma and Min Zhang and Yang Feng},
+      year={2024},
+      booktitle = {Proceedings of the 62th Annual Meeting of the Association for Computational Linguistics (Long Papers)},
+      publisher = {Association for Computational Linguistics}
 }
 ```
