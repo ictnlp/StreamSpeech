@@ -20,7 +20,7 @@ Code for ACL 2024 paper "[StreamSpeech: Simultaneous Speech-to-Speech Translatio
 </p>
 
 💡**Highlight**:
-1. StreamSpeech achieves **state-of-the-art performance** on both offline and simultaneous speech-to-speech translation.
+1. StreamSpeech achieves **SOTA performance** on both offline and simultaneous speech-to-speech translation.
 2. StreamSpeech performs **streaming ASR**, **simultaneous speech-to-text translation** and **simultaneous speech-to-speech translation** via an "All in One" seamless model.
 3. StreamSpeech can present intermediate results (i.e., ASR or translation results) during simultaneous translation, offering a more comprehensive low-latency communication experience.
 
@@ -41,7 +41,7 @@ Code for ACL 2024 paper "[StreamSpeech: Simultaneous Speech-to-Speech Translatio
 | **Speech Recognition**                          | jai donc expérience des années passé jen dirairai un mot tout à lheure | jai donc lexpérience des années passé jen dirairai un mot tout à lheure |
 | **Speech-to-Text Translation**                  | i therefore have an experience of last years i will tell a word later | so i have the experience in the past years i'll say a word later |
 | **Speech-to-Speech Translation**                | <video src='https://github.com/zhangshaolei1998/StreamSpeech_dev/assets/34680227/ed41ba13-353b-489b-acfa-85563d0cc2cb' width="30%"/>                          | <video src='https://github.com/zhangshaolei1998/StreamSpeech_dev/assets/34680227/ca482ba6-76da-4619-9dfd-24aa2eb3339a' width="30%"/>                          |
-| **Text-to-Speech Synthesis (in cascased StreamSpeech)** *incrementally synthesize speech word by word* | <video src='https://github.com/zhangshaolei1998/StreamSpeech_dev/assets/34680227/294f1310-eace-4914-be30-5cd798e8592e' width="30%"/>                          | <video src='https://github.com/zhangshaolei1998/StreamSpeech_dev/assets/34680227/52854163-7fc5-4622-a5a6-c133cbd99e58' width="30%"/>                          |
+| **Text-to-Speech Synthesis** (*incrementally synthesize speech word by word*) | <video src='https://github.com/zhangshaolei1998/StreamSpeech_dev/assets/34680227/294f1310-eace-4914-be30-5cd798e8592e' width="30%"/>                          | <video src='https://github.com/zhangshaolei1998/StreamSpeech_dev/assets/34680227/52854163-7fc5-4622-a5a6-c133cbd99e58' width="30%"/>                          |
 
 
 
