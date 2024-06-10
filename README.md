@@ -5,7 +5,7 @@
 [![model](https://img.shields.io/badge/%F0%9F%A4%97%20-StreamSpeech_Models-blue.svg)](https://huggingface.co/ICTNLP/StreamSpeech_Models/tree/main)
 [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fictnlp%2FStreamSpeech&count_bg=%2379C83D&title_bg=%23555555&icon=awesomelists.svg&icon_color=%23E7E7E7&title=Visitors&edge_flat=false)](https://hits.seeyoufarm.com)
 
-[![twitter](https://img.shields.io/badge/Twitter-@Gorden%20Sun-black?logo=X&logoColor=black)](https://x.com/Gorden_Sun/status/1798742796524007845)[![twitter](https://img.shields.io/badge/Twitter-@imxiaohu-black?logo=X&logoColor=black)](https://x.com/imxiaohu/status/1798999363987124355)
+[![twitter](https://img.shields.io/badge/Twitter-@Gorden%20Sun-black?logo=X&logoColor=black)](https://x.com/Gorden_Sun/status/1798742796524007845) [![twitter](https://img.shields.io/badge/Twitter-@imxiaohu-black?logo=X&logoColor=black)](https://x.com/imxiaohu/status/1798999363987124355)
 
 > **Authors**: **[Shaolei Zhang](https://zhangshaolei1998.github.io/), [Qingkai Fang](https://fangqingkai.github.io/), [Shoutao Guo](https://scholar.google.com.hk/citations?user=XwHtPyAAAAAJ&hl), [Zhengrui Ma](https://scholar.google.com.hk/citations?user=dUgq6tEAAAAJ), [Min Zhang](https://scholar.google.com.hk/citations?user=CncXH-YAAAAJ), [Yang Feng*](https://people.ucas.edu.cn/~yangfeng?language=en)**
 
