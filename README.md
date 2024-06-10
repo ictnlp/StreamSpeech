@@ -3,6 +3,10 @@
 [![arXiv](https://img.shields.io/badge/arXiv-2406.03049-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2406.03049)
 [![project](https://img.shields.io/badge/%F0%9F%8E%A7%20Demo-Listen%20to%20StreamSpeech-orange.svg)](https://ictnlp.github.io/StreamSpeech-site/)
 [![model](https://img.shields.io/badge/%F0%9F%A4%97%20-StreamSpeech_Models-blue.svg)](https://huggingface.co/ICTNLP/StreamSpeech_Models/tree/main)
+[![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fictnlp%2FStreamSpeech&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=Visitor&edge_flat=false)](https://hits.seeyoufarm.com)
+
+[![twitter](https://img.shields.io/badge/Twitter-@Gorden%20Sun-black?logo=X&logoColor=black)](https://x.com/Gorden_Sun/status/1798742796524007845)
+[![twitter](https://img.shields.io/badge/Twitter-@imxiaohu-black?logo=X&logoColor=black)](https://x.com/imxiaohu/status/1798999363987124355)
 
 > **[Shaolei Zhang](https://zhangshaolei1998.github.io/), [Qingkai Fang](https://fangqingkai.github.io/), [Shoutao Guo](https://scholar.google.com.hk/citations?user=XwHtPyAAAAAJ&hl), [Zhengrui Ma](https://scholar.google.com.hk/citations?user=dUgq6tEAAAAJ), [Min Zhang](https://scholar.google.com.hk/citations?user=CncXH-YAAAAJ), [Yang Feng*](https://people.ucas.edu.cn/~yangfeng?language=en)**
 
@@ -17,7 +21,7 @@ Code for ACL 2024 paper "[StreamSpeech: Simultaneous Speech-to-Speech Translatio
 </p>
 
 💡**Highlight**:
-1. StreamSpeech achieves **SOTA performance** on both offline and simultaneous speech-to-speech translation.
+1. StreamSpeech achieves **state-of-the-art performance** on both offline and simultaneous speech-to-speech translation.
 2. StreamSpeech performs **streaming ASR**, **simultaneous speech-to-text translation** and **simultaneous speech-to-speech translation** via an "All in One" seamless model.
 3. StreamSpeech can present intermediate results (i.e., ASR or translation results) during simultaneous translation, offering a more comprehensive low-latency communication experience.
 
@@ -25,22 +29,21 @@ Code for ACL 2024 paper "[StreamSpeech: Simultaneous Speech-to-Speech Translatio
 
 **Support 8 tasks**:
 - **Offline**: Speech Recognition (ASR)✅, Speech-to-Text Translation (S2TT)✅, Speech-to-Speech Translation (S2ST)✅, Speech Synthesis (TTS)✅
-- **Simultaneous**: Streaming ASR✅, Simultaneous S2TT✅, Simultaneous S2ST✅, Real-time TTS✅
+- **Simultaneous**: Streaming ASR✅, Simultaneous S2TT✅, Simultaneous S2ST✅, Real-time TTS✅ under any latency (with one model)
 
 **Case**: more cases can be explored at [ictnlp.github.io/StreamSpeech-site/](https://ictnlp.github.io/StreamSpeech-site/)
 
 > **Speech Input**: [example/wavs/common_voice_fr_17301936.mp3](./example/wavs/common_voice_fr_17301936.mp3)
->
 > **Transcription** (ground truth): jai donc lexpérience des années passées jen dirai un mot tout à lheure
->
 > **Translation** (ground truth): i therefore have the experience of the passed years i'll say a few words about that later
 
 | StreamSpeech                                    | Simultaneous                                                 | Offline                                                      |
 | ----------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | **Speech Recognition**                          | jai donc expérience des années passé jen dirairai un mot tout à lheure | jai donc lexpérience des années passé jen dirairai un mot tout à lheure |
 | **Speech-to-Text Translation**                  | i therefore have an experience of last years i will tell a word later | so i have the experience in the past years i'll say a word later |
-| **Speech-to-Speech Translation**                | <video src='https://github.com/ictnlp/StreamSpeech/assets/34680227/a7ea7bc5-ce60-47f4-9872-044ccebb7da4' width="30%"/>                          | <video src='https://github.com/ictnlp/StreamSpeech/assets/34680227/b04de1a7-1fc1-4a1c-9883-7336fb483182' width="30%"/>                          |
-| **Text-to-Speech Synthesis (in cascased StreamSpeech)** | <video src='https://github.com/ictnlp/StreamSpeech/assets/34680227/8826ee15-da5b-44ae-aa5a-2d80502182d2' width="30%"/>                          | <video src='https://github.com/ictnlp/StreamSpeech/assets/34680227/7361bd33-709a-49bd-b050-89b24212f815' width="30%"/>                          |
+| **Speech-to-Speech Translation**                | <video src='https://github.com/zhangshaolei1998/StreamSpeech_dev/assets/34680227/ed41ba13-353b-489b-acfa-85563d0cc2cb' width="30%"/>                          | <video src='https://github.com/zhangshaolei1998/StreamSpeech_dev/assets/34680227/ca482ba6-76da-4619-9dfd-24aa2eb3339a' width="30%"/>                          |
+| **Text-to-Speech Synthesis (in cascased StreamSpeech)** *incrementally synthesize speech word by word* | <video src='https://github.com/zhangshaolei1998/StreamSpeech_dev/assets/34680227/294f1310-eace-4914-be30-5cd798e8592e' width="30%"/>                          | <video src='https://github.com/zhangshaolei1998/StreamSpeech_dev/assets/34680227/52854163-7fc5-4622-a5a6-c133cbd99e58' width="30%"/>                          |
+
 
 
 ## ⚙Requirements
@@ -81,7 +84,7 @@ Replace `/data/zhangshaolei/StreamSpeech` in files [configs/fr-en/config_gcmvn.y
 
 #### (2) Test Data
 
-Prepare test data following [SimulEval](https://github.com/facebookresearch/SimulEval) format. [./example/](./example) provides an example:
+Prepare test data following [SimulEval](https://github.com/facebookresearch/SimulEval) format. [example/](./example) provides an example:
 
 - [wav_list.txt](./example/wav_list.txt): Each line records the path of a source speech.
 - [target.txt](./example/target.txt): Each line records the reference text, e.g., target translation or source transcription (used to calculate the metrics).
@@ -90,7 +93,7 @@ Prepare test data following [SimulEval](https://github.com/facebookresearch/Simu
 
 Run these scripts to inference StreamSpeech on streaming ASR, simultaneous S2TT and  simultaneous S2ST.
 
-> use `--source-segment-size` to set the chunk size (millisecond) and control the latency
+> `--source-segment-size`: set the chunk size (millisecond) to any value to control the latency
 
 <details>
 <summary>Simultaneous Speech-to-Speech Translation</summary>
@@ -335,13 +338,13 @@ Our project page ([https://ictnlp.github.io/StreamSpeech-site/](https://ictnlp.g
 #### (3) Simultaneous Speech-to-Text Translation
 
 <p align="center" width="100%">
-<img src="./assets/s2tt.png" alt="simul" style="width: 40%; min-width: 300px; display: block; margin: auto;">
+<img src="./assets/s2tt.png" alt="simul" style="width: 35%; min-width: 300px; display: block; margin: auto;">
 </p>
 
-#### (4) Streaming ASR
+#### (4) Streaming ASR (AL: latency | WER: quality)
 
 <p align="center" width="100%">
-<img src="./assets/asr.png" alt="simul" style="width: 55%; min-width: 300px; display: block; margin: auto;">
+<img src="./assets/asr.png" alt="simul" style="width: 50%; min-width: 300px; display: block; margin: auto;">
 </p>
 
 ## 🖋Citation
