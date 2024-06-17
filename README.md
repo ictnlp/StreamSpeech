@@ -10,7 +10,7 @@
 > **Authors**: **[Shaolei Zhang](https://zhangshaolei1998.github.io/), [Qingkai Fang](https://fangqingkai.github.io/), [Shoutao Guo](https://scholar.google.com.hk/citations?user=XwHtPyAAAAAJ&hl), [Zhengrui Ma](https://scholar.google.com.hk/citations?user=dUgq6tEAAAAJ), [Min Zhang](https://scholar.google.com.hk/citations?user=CncXH-YAAAAJ), [Yang Feng*](https://people.ucas.edu.cn/~yangfeng?language=en)**
 
 
-Code for ACL 2024 paper "[StreamSpeech: Simultaneous Speech-to-Speech Translation with Multi-task Learning](https://arxiv.org/pdf/2406.03049)". If you like our project, please give us a star ⭐ for latest update.
+Code for ACL 2024 paper "[StreamSpeech: Simultaneous Speech-to-Speech Translation with Multi-task Learning](https://arxiv.org/pdf/2406.03049)".
 
 <p align="center" width="100%">
 <img src="./assets/streamspeech.png" alt="StreamSpeech" style="width: 70%; min-width: 300px; display: block; margin: auto;">
@@ -26,29 +26,37 @@ Code for ACL 2024 paper "[StreamSpeech: Simultaneous Speech-to-Speech Translatio
 
 ## ⭐Features
 
-**Support 8 tasks**:
+### Support 8 Tasks
 - **Offline**: Speech Recognition (ASR)✅, Speech-to-Text Translation (S2TT)✅, Speech-to-Speech Translation (S2ST)✅, Speech Synthesis (TTS)✅
-- **Simultaneous**: Streaming ASR✅, Simultaneous S2TT✅, Simultaneous S2ST✅, Real-time TTS✅ under any latency (with only one model)
+- **Simultaneous**: Streaming ASR✅, Simultaneous S2TT✅, Simultaneous S2ST✅, Real-time TTS✅ under any latency (with one model)
 
-**Case**: more cases can be explored at [ictnlp.github.io/StreamSpeech-site/](https://ictnlp.github.io/StreamSpeech-site/)
+### GUI Demo
+
+<video src='https://github.com/zhangshaolei1998/StreamSpeech_dev/assets/34680227/ed41ba13-353b-489b-acfa-85563d0cc2cb' width="100%"/> 
+<p align="center">
+  Simultaneously providing ASR, translation, and synthesis results via a seamless model.
+</p>
+
+### Case
 
 > **Speech Input**: [example/wavs/common_voice_fr_17301936.mp3](./example/wavs/common_voice_fr_17301936.mp3)
+>
 > **Transcription** (ground truth): jai donc lexpérience des années passées jen dirai un mot tout à lheure
+>
 > **Translation** (ground truth): i therefore have the experience of the passed years i'll say a few words about that later
 
 | StreamSpeech                                    | Simultaneous                                                 | Offline                                                      |
 | ----------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | **Speech Recognition**                          | jai donc expérience des années passé jen dirairai un mot tout à lheure | jai donc lexpérience des années passé jen dirairai un mot tout à lheure |
 | **Speech-to-Text Translation**                  | i therefore have an experience of last years i will tell a word later | so i have the experience in the past years i'll say a word later |
-| **Speech-to-Speech Translation**                | <video src='https://github.com/ictnlp/StreamSpeech/assets/34680227/88caeb5d-66c6-4b8c-8918-d9b5b27a3257' width="30%"/>                          | <video src='https://github.com/ictnlp/StreamSpeech/assets/34680227/2cbc871e-c8fa-409e-9254-c76eeaf12166' width="30%"/>                          |
-| **Text-to-Speech Synthesis** (*incrementally synthesize speech word by word*) | <video src='https://github.com/ictnlp/StreamSpeech/assets/34680227/bbd0cbc0-9727-4ed4-b106-c3d3aa3f3e4d' width="30%"/>                          | <video src='https://github.com/ictnlp/StreamSpeech/assets/34680227/e8f56ec7-eb3a-4255-bf02-0982451fb013' width="30%"/>                          |
+| **Speech-to-Speech Translation**                | <video src='https://github.com/zhangshaolei1998/StreamSpeech_dev/assets/34680227/ed41ba13-353b-489b-acfa-85563d0cc2cb' width="30%"/>                          | <video src='https://github.com/zhangshaolei1998/StreamSpeech_dev/assets/34680227/ca482ba6-76da-4619-9dfd-24aa2eb3339a' width="30%"/>                          |
+| **Text-to-Speech Synthesis** (*incrementally synthesize speech word by word*) | <video src='https://github.com/zhangshaolei1998/StreamSpeech_dev/assets/34680227/294f1310-eace-4914-be30-5cd798e8592e' width="30%"/>                          | <video src='https://github.com/zhangshaolei1998/StreamSpeech_dev/assets/34680227/52854163-7fc5-4622-a5a6-c133cbd99e58' width="30%"/>                          |
 
 
 
 ## ⚙Requirements
 
-- Python == 3.10, PyTorch == 2.0.1
-- Install fairseq & SimulEval:
+- Python == 3.10, PyTorch == 2.0.1, Install fairseq & SimulEval
 
   ```bash
   cd fairseq
