@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamSpeech</title>
+    <script src="https://unpkg.com/wavesurfer.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        .container {
+            max-width: 1400px; /* Increased the width */
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #000000;
+        }
+        p {
+            text-align: center;
+        }
+        .badges {
+            text-align: center;
+            margin: 15px 0; /* Reduced the margin */
+        }
+        form {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px; /* Reduced the margin */
+        }
+        input[type="file"] {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 5px; /* Reduced the padding */
+            cursor: pointer;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px; /* Reduced the padding */
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        button:disabled {
+            background-color: #ddd;
+            cursor: not-allowed;
+        }
+        button:hover:not([disabled]) {
+            background-color: #45a049;
+        }
+        #waveform, #outputWaveform {
+            margin: 10px 0; /* Reduced the margin */
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .results {
+            margin-top: 10px; /* Reduced the margin */
+            padding: 10px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        h2, .result-title {
+            font-size: 16px;
+            color: #000000;
+            align-items: center;
+            margin: 5px 0; /* Reduced the margin */
+        }
+        .result-content {
+            font-size: 16px;
+            color: #001eff;
+            margin-left: 10px;
+            white-space: pre-wrap; /* Preserve empty lines */
+            min-height: 1em; /* Ensure at least one line of height */
+        }
+        .result-content2 {
+            font-size: 16px;
+            color: #ff8800;
+            margin-left: 10px;
+            white-space: pre-wrap; /* Preserve empty lines */
+            min-height: 1em; /* Ensure at least one line of height */
+        }
+        .streaming-inputs {
+            margin-top: 10px; /* Reduced the margin */
+            padding: 10px;
+            background: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .wave-progress {
+            width: 10px; /* Adjust the height for the progress line width */
+        }
+        .tag-sticker {
+        position: absolute;
+        font-size: 16px;
+        top: 0px; /* Adjusted top position to be above the title */
+        left: 5px; /* Adjusted left position to align with the title */
+        transform: rotate(-15deg);
+        background-color: #ff5722;
+        color: white;
+        padding: 5px 5px;
+        font-weight: bold;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .title-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 0; /* Reduce the margin-bottom to minimize space */
+        }
+        h1 {
+            margin-bottom: -5px; /* Reduced the margin-bottom of the title */
+            color: #000000;
+        }
+        h4{
+            font-size: 18px;
+            color: #000000;
+            margin: 3px 0; /* Reduced the margin */
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            margin-right: 10px;
+            position: relative;
+        }
+        .slider-container label {
+            margin-right: 10px;
+        }
+        #latencySlider {
+            margin-right: 10px;
+        }
+        #latencyValueBox {
+            display: inline-block;
+            width: 50px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 3px;
+            background-color: #fff;
+        }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <div class="title-container">
+            <div class="tag-sticker"> ACL 2024 </div>
+            <h1>StreamSpeech: Simultaneous Speech-to-Speech Translation with Multi-task Learning</h1>
+        </div>
+        <p><strong>Authors</strong>: Shaolei Zhang, Qingkai Fang, Shoutao Guo, Zhengrui Ma, Min Zhang, Yang Feng*</p>
+        <h4>💡<strong>StreamSpeech</strong> is an <font color="red">"All in One" seamless model</font> for offline and simultaneous speech recognition, speech translation and speech synthesis under any latency.</h4>
+        <div class="badges">
+            <a href="https://arxiv.org/abs/2406.03049"><img src="https://img.shields.io/badge/arXiv-2406.03049-b31b1b.svg?logo=arXiv" alt="arXiv"></a>
+            <a href="https://ictnlp.github.io/StreamSpeech-site/"><img src="https://img.shields.io/badge/%F0%9F%8E%A7%20Demo-Listen%20to%20StreamSpeech-orange.svg" alt="Demo"></a>
+            <a href="https://huggingface.co/ICTNLP/StreamSpeech_Models/tree/main"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20-StreamSpeech_Models-blue.svg" alt="StreamSpeech Models"></a>
+            <a href="https://github.com/ictnlp/StreamSpeech"><img src="https://img.shields.io/github/stars/ictnlp/StreamSpeech?style=social&label=GitHub+Repo" alt="Visitors"></a>
+        </div>
+        <form id="uploadForm">
+            <div class="slider-container">
+                <label for="latencySlider">Latency (ms): </label>
+                <input type="range" id="latencySlider" name="latency" min="320" max="5000" value="320" step="10" oninput="updateLatencyLabel(this)">
+                <div id="latencyValueBox">320</div>
+            </div>
+            <input type="file" id="fileInput" name="file" required>
+            <button type="submit" id="uploadButton" disabled>Upload</button>
+        </form>
+        <div class="streaming-inputs">
+            <h2>Streaming Inputs</h2>
+            <div id="waveform"></div>
+            <button id="playButton" disabled>▶Play/Pause</button>
+        </div>
+        <br><br>
+        <div class="results">
+            <h2 class="result-title">Streaming Speech Recognition<br></h2>
+            <div id="asrResult" class="result-content"><br></div> <!-- Ensure empty line initially -->
+        </div>
+        <div class="results">
+            <h2 class="result-title">Simultaneous Speech-to-Text Translation</h2>
+            <div id="translationResult" class="result-content2"><br></div> <!-- Ensure empty line initially -->
+        </div>
+        <div class="results">
+            <h2 class="result-title">Simultaneous Speech-to-Speech Translation</h2>
+            <div id="outputWaveform"></div>
+        </div>
+    </div>
+
+    <script>
+        var inputWaveSurfer, outputWaveSurfer;
+        var asrInterval, translationInterval;
+        var playButton = document.getElementById('playButton');
+
+        // Listen for changes in the file input
+        document.getElementById('fileInput').addEventListener('change', function() {
+            var uploadButton = document.getElementById('uploadButton');
+            if (this.files.length > 0) {
+                uploadButton.disabled = false;
+                uploadButton.style.backgroundColor = '#4CAF50'; // Change color to green
+            } else {
+                uploadButton.disabled = true;
+                uploadButton.style.backgroundColor = '#ddd'; // Change back to gray
+            }
+        });
+
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var formData = new FormData();
+            var fileInput = document.getElementById('fileInput');
+            var file = fileInput.files[0];
+            formData.append('file', file);
+
+            // Get the latency value
+            var latency = document.getElementById('latencySlider').value;
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(filepath => {
+                var filename = filepath.split('/').pop();
+                refreshResults(); // Refresh results area
+
+                if (inputWaveSurfer) {
+                    inputWaveSurfer.destroy();
+                }
+                if (outputWaveSurfer) {
+                    outputWaveSurfer.destroy();
+                }
+
+                inputWaveSurfer = WaveSurfer.create({
+                    container: '#waveform',
+                    waveColor: '#ffffff',
+                    progressColor: 'blue',
+                    normalize: true, // Add normalize to input waveform
+                    // barWidth:1.0,
+                    splitChannels: true, // Split channels for left and right output
+                    channel: 'left', // Left channel for inputWaveSurfer
+                    progressClass: 'wave-progress' /* Custom class for progress line */
+                    
+                });
+
+                inputWaveSurfer.on('ready', function() {
+                    outputWaveSurfer = WaveSurfer.create({
+                        container: '#outputWaveform',
+                        waveColor: '#f9f9f9', // Audio Result: blue color
+                        progressColor: 'orange', // Blue progress color
+                        // barWidth:1.0,
+                        splitChannels: true, // Split channels for left and right output
+                        channel: 'right', // Left channel for inputWaveSurfer
+                        normalize: true // Add normalize to output waveform
+                    });
+
+                    outputWaveSurfer.load(`/uploads/output/${filename}`);
+
+                    playButton.disabled = false;
+                    playButton.style.backgroundColor = '#4CAF50'; // Change color to green
+
+                    // Ensure old event listeners are removed before adding new ones
+                    playButton.removeEventListener('click', playPauseHandler);
+                    playButton.addEventListener('click', playPauseHandler);
+
+                    inputWaveSurfer.on('play', function() {
+                        outputWaveSurfer.play();
+                        outputWaveSurfer.seekTo(inputWaveSurfer.getCurrentTime() / inputWaveSurfer.getDuration());
+
+                        updateASRResult(inputWaveSurfer.getCurrentTime());
+                        updateTranslationResult(inputWaveSurfer.getCurrentTime());
+
+                        asrInterval = setInterval(function() {
+                            updateASRResult(inputWaveSurfer.getCurrentTime());
+                        }, 320);
+
+                        translationInterval = setInterval(function() {
+                            updateTranslationResult(inputWaveSurfer.getCurrentTime());
+                        }, 320);
+                    });
+
+                    inputWaveSurfer.on('pause', function() {
+                        outputWaveSurfer.pause();
+                        clearInterval(asrInterval);
+                        clearInterval(translationInterval);
+                    });
+
+                    inputWaveSurfer.on('seek', function() {
+                        var seekTime = inputWaveSurfer.getCurrentTime() / inputWaveSurfer.getDuration();
+                        outputWaveSurfer.seekTo(seekTime);
+                    });
+
+                    inputWaveSurfer.on('finish', function() {
+                        updateASRResult(inputWaveSurfer.getCurrentTime());
+                        updateTranslationResult(inputWaveSurfer.getCurrentTime());
+                    });
+                });
+
+                // Pass the latency parameter to the server
+                inputWaveSurfer.load(`/uploads/${filename}?latency=${latency}`);
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        function refreshResults() {
+            document.getElementById('asrResult').innerText = ''; // Clear ASR result and preserve empty line
+            document.getElementById('translationResult').innerText = ''; // Clear translation result and preserve empty line
+            document.getElementById('outputWaveform').innerHTML = ''; // Clear output waveform
+            document.getElementById('waveform').innerHTML = ''; // Clear input waveform
+            if (inputWaveSurfer) {
+                inputWaveSurfer.destroy();
+                inputWaveSurfer = null;
+            }
+            if (outputWaveSurfer) {
+                outputWaveSurfer.destroy();
+                outputWaveSurfer = null;
+            }
+        }
+
+        function playPauseHandler() {
+            if (inputWaveSurfer) {
+                inputWaveSurfer.playPause();
+            }
+            if (outputWaveSurfer) {
+                outputWaveSurfer.playPause();
+            }
+        }
+
+        function updateASRResult(currentTime) {
+            fetch(`/asr/${currentTime}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('asrResult').innerText = data.result || '\n'; // Preserve empty line
+                });
+        }
+
+        function updateTranslationResult(currentTime) {
+            fetch(`/translation/${currentTime}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('translationResult').innerText = data.result || '\n'; // Preserve empty line
+                });
+        }
+        function updateLatencyLabel(slider) {
+            var latencyValueBox = document.getElementById('latencyValueBox');
+            latencyValueBox.innerText = slider.value;
+        }
+
+        document.getElementById('uploadForm').addEventListener('change', function() {
+            var fileInput = document.getElementById('fileInput');
+            var uploadButton = document.getElementById('uploadButton');
+            uploadButton.disabled = !fileInput.value;
+        });
+    </script>
+</body>
+</html>

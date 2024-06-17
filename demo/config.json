@@ -1,0 +1,12 @@
+{
+    "data-bin": "/data/zhangshaolei/StreamSpeech/configs/fr-en",
+    "user-dir": "/data/zhangshaolei/StreamSpeech/researches/ctc_unity",
+    "agent-dir": "/data/zhangshaolei/StreamSpeech/agent",
+    "model-path": "/data/zhangshaolei/StreamSpeech_model/streamspeech.simultaneous.fr-en.pt",
+    "config-yaml": "config_gcmvn.yaml",
+    "multitask-config-yaml": "config_mtl_asr_st_ctcst.yaml",
+    "segment-size": 320,
+    "vocoder": "/data/zhangshaolei/pretrain_models/unit-based_HiFi-GAN_vocoder/mHuBERT.layer11.km1000.en/g_00500000",
+    "vocoder-cfg": "/data/zhangshaolei/pretrain_models/unit-based_HiFi-GAN_vocoder/mHuBERT.layer11.km1000.en/config.json",
+    "dur-prediction": true
+}
