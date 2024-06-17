@@ -32,7 +32,7 @@ Code for ACL 2024 paper "[StreamSpeech: Simultaneous Speech-to-Speech Translatio
 
 ### GUI Demo
 
-<video src='https://github.com/zhangshaolei1998/StreamSpeech_dev/assets/34680227/ed41ba13-353b-489b-acfa-85563d0cc2cb' width="100%"/> 
+<video src='https://github.com/zhangshaolei1998/StreamSpeech_dev/assets/34680227/ed41ba13-353b-489b-acfa-85563d0cc2cb' width="100%"> 
 
 ### Case
 
