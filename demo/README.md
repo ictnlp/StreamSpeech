@@ -24,7 +24,7 @@ PYTHONPATH=$ROOT/fairseq python infer.py --data-bin ${ROOT}/configs/${LANG}-en \
 
 ## GUI Demo
 1. Modify the config file [config.json](./config.json)
-2. Run GUI
+2. Run GUI Inference
 ```shell
 python app.py
 ```
