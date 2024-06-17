@@ -30,6 +30,9 @@ Code for ACL 2024 paper "[StreamSpeech: Simultaneous Speech-to-Speech Translatio
 - **Offline**: Speech Recognition (ASR)✅, Speech-to-Text Translation (S2TT)✅, Speech-to-Speech Translation (S2ST)✅, Speech Synthesis (TTS)✅
 - **Simultaneous**: Streaming ASR✅, Simultaneous S2TT✅, Simultaneous S2ST✅, Real-time TTS✅ under any latency (with one model)
 
+
+<video src='https://github.com/zhangshaolei1998/StreamSpeech_dev/assets/34680227/ed41ba13-353b-489b-acfa-85563d0cc2cb' width="90%"/> 
+
 ### Case
 
 > **Speech Input**: [example/wavs/common_voice_fr_17301936.mp3](./example/wavs/common_voice_fr_17301936.mp3)
