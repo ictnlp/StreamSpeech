@@ -32,6 +32,8 @@ Code for ACL 2024 paper "[StreamSpeech: Simultaneous Speech-to-Speech Translatio
 
 ### GUI Demo
 
+https://github.com/ictnlp/StreamSpeech/assets/34680227/4d9bdabf-af66-4320-ae7d-0f23e721cd71
+
 ### Case
 
 > **Speech Input**: [example/wavs/common_voice_fr_17301936.mp3](./example/wavs/common_voice_fr_17301936.mp3)
