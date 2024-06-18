@@ -24,6 +24,10 @@ Code for ACL 2024 paper "[StreamSpeech: Simultaneous Speech-to-Speech Translatio
 2. StreamSpeech performs **streaming ASR**, **simultaneous speech-to-text translation** and **simultaneous speech-to-speech translation** via an "All in One" seamless model.
 3. StreamSpeech can present intermediate results (i.e., ASR or translation results) during simultaneous translation, offering a more comprehensive low-latency communication experience.
 
+## 🔥News
+- [06.17] Add [Web GUI demo](./demo), now you can experience StreamSpeech in your local browser.
+- [06.05] [Paper](https://arxiv.org/pdf/2406.03049), [code](https://github.com/ictnlp/StreamSpeech), [models](https://huggingface.co/ICTNLP/StreamSpeech_Models/tree/main) and [demo](https://ictnlp.github.io/StreamSpeech-site/) of StreamSpeech are available!
+
 ## ⭐Features
 
 ### Support 8 Tasks
@@ -65,7 +69,7 @@ https://github.com/ictnlp/StreamSpeech/assets/34680227/4d9bdabf-af66-4320-ae7d-0
   pip install --editable ./
   ```
 
-## 🔥Quick Start
+## 🚀Quick Start
 
 ### 1. Model Download
 
