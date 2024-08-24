@@ -212,13 +212,13 @@ class SpeechToUnit2passCTCASRSTMultitaskTaskCriterion(
         else:
             target_lengths = pad_mask.sum(-1)
 
-        if target.size(1) > lprobs.size(1):
-            target = target[:, : lprobs.size(1)]
-            target_lengths = target_lengths.clamp(1, target.size(1))
-
-        input_lengths = target.new_full(
-            (target.size(0),), target.size(1), dtype=torch.long
-        )
+        if net_output[-1]["decoder_padding_mask"] is not None:
+            non_padding_mask = ~net_output[-1]["decoder_padding_mask"]
+            input_lengths = non_padding_mask.long().sum(-1)
+        else:
+            input_lengths = lprobs.new_full(
+                (lprobs.size(0),), lprobs.size(1), dtype=torch.long
+            )
 
         with torch.backends.cudnn.flags(enabled=False):
             loss = F.ctc_loss(
