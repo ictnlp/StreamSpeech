@@ -4,9 +4,18 @@
 #
 # StreamSpeech: Simultaneous Speech-to-Speech Translation with Multi-task Learning (ACL 2024)
 ##########################################
+import sys
+import os
+# Add fairseq to Python path
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), 'fairseq'))
+
 from flask import Flask, request, jsonify, render_template, send_from_directory,url_for
 import os
 import json
+import logging
+
+# Re-enable Flask request logging (comment out to hide logs)
+# logging.getLogger('werkzeug').setLevel(logging.ERROR)
 import pdb
 import argparse
 from pydub import AudioSegment
@@ -23,7 +32,10 @@ from fairseq.models.text_to_speech.hub_interface import TTSHubInterface
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
 from fairseq.data.audio.audio_utils import convert_waveform
-from examples.speech_to_text.data_utils import extract_fbank_features
+# Import data_utils directly from the file path
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), 'fairseq', 'examples', 'speech_to_text'))
+from data_utils import extract_fbank_features
 import ast
 import math
 import os
@@ -55,6 +67,8 @@ ASR={}
 S2TT={}
 
 S2ST=[]
+S2ST_ORIGINAL=[]  # For dual mode: original vocoder output
+S2ST_MODIFIED=[]  # For dual mode: modified vocoder output
 
 class OnlineFeatureExtractor:
     """
@@ -97,9 +111,18 @@ class OnlineFeatureExtractor:
             + self.len_ms_to_samples(self.window_size - self.shift_size)
         )
         samples = samples[:effective_num_samples]
-        waveform, sample_rate = convert_waveform(
-            torch.tensor([samples]), sr, to_mono=True, to_sample_rate=16000
-        )
+        # Simple audio conversion without sox dependency
+        waveform = torch.tensor([samples])
+        if sr != 16000:
+            # Simple resampling using torch.nn.functional.interpolate
+            # waveform is 2D: [1, samples_length]
+            target_length = int(len(samples) * 16000 / sr)
+            # For linear interpolation, we need 3D input: [batch, channels, length]
+            waveform = waveform.unsqueeze(0)  # Now [1, 1, samples_length]
+            waveform = torch.nn.functional.interpolate(
+                waveform, size=target_length, mode='linear', align_corners=False
+            ).squeeze(0)  # Back to [1, target_length]
+        sample_rate = 16000
         output = extract_fbank_features(waveform, 16000)
         output = self.transform(output)
         return torch.tensor(output, device=self.device)
@@ -147,7 +170,6 @@ class StreamSpeechS2STAgent(SpeechToSpeechAgent):
         from agent.sequence_generator import SequenceGenerator
         from agent.ctc_generator import CTCSequenceGenerator
         from agent.ctc_decoder import CTCDecoder
-        from agent.tts.vocoder import CodeHiFiGANVocoderWithDur
 
         self.ctc_generator = CTCSequenceGenerator(
             tgt_dict, self.models, use_incremental_states=False
@@ -195,11 +217,30 @@ class StreamSpeechS2STAgent(SpeechToSpeechAgent):
             use_incremental_states=False,
         )
 
-        with open(args.vocoder_cfg) as f:
-            vocoder_cfg = json.load(f)
-        self.vocoder = CodeHiFiGANVocoderWithDur(args.vocoder, vocoder_cfg)
-        if self.device == "cuda":
-            self.vocoder = self.vocoder.cuda()
+        # Initialize vocoder wrapper
+        from vocoder_wrapper import VocoderWrapper, DualVocoderWrapper
+        
+        vocoder_type = getattr(args, 'vocoder_type', 'original')  # default to original
+        
+        if vocoder_type == 'dual':
+            # Initialize dual vocoder system for side-by-side comparison
+            self.vocoder = DualVocoderWrapper(
+                original_vocoder_path=getattr(args, 'original_vocoder', args.vocoder),
+                original_vocoder_cfg=getattr(args, 'original_vocoder_cfg', args.vocoder_cfg),
+                modified_vocoder_path=getattr(args, 'modified_vocoder', args.vocoder),
+                modified_vocoder_cfg=getattr(args, 'modified_vocoder_cfg', args.vocoder_cfg),
+                device=self.device
+            )
+            self.dual_mode = True
+        else:
+            self.vocoder = VocoderWrapper(
+                vocoder_type=vocoder_type,
+                vocoder_path=args.vocoder,
+                vocoder_cfg_path=args.vocoder_cfg,
+                device=self.device
+            )
+            self.dual_mode = False
+        
         self.dur_prediction = args.dur_prediction
 
         self.lagging_k1 = args.lagging_k1
@@ -318,6 +359,37 @@ class StreamSpeechS2STAgent(SpeechToSpeechAgent):
             type=str,
             required=True,
             help="path to the CodeHiFiGAN vocoder config",
+        )
+        parser.add_argument(
+            "--vocoder-type",
+            type=str,
+            default="original",
+            choices=["original", "modified", "dual"],
+            help="Type of vocoder to use: 'original' (CodeHiFiGAN), 'modified' (UnitHiFiGAN+FiLM), or 'dual' (both for comparison)",
+        )
+        parser.add_argument(
+            "--original-vocoder",
+            type=str,
+            required=False,
+            help="path to the original CodeHiFiGAN vocoder (for dual mode)",
+        )
+        parser.add_argument(
+            "--original-vocoder-cfg",
+            type=str,
+            required=False,
+            help="path to the original CodeHiFiGAN vocoder config (for dual mode)",
+        )
+        parser.add_argument(
+            "--modified-vocoder",
+            type=str,
+            required=False,
+            help="path to the modified UnitHiFiGAN vocoder (for dual mode)",
+        )
+        parser.add_argument(
+            "--modified-vocoder-cfg",
+            type=str,
+            required=False,
+            help="path to the modified UnitHiFiGAN vocoder config (for dual mode)",
         )
         parser.add_argument(
             "--dur-prediction",
@@ -788,30 +860,83 @@ class StreamSpeechS2STAgent(SpeechToSpeechAgent):
                     finished=True,
                 )
 
+        # Extract discrete units before vocoder
+        if self.states.source_finished and len(unit) > 0:
+            try:
+                from extract_intermediates import save_discrete_units
+                # Use source filename if available, otherwise default to "output"
+                filename_prefix = getattr(self, 'current_source_filename', 'output')
+                save_discrete_units(unit, filename_prefix=f"{filename_prefix}_output")
+            except Exception as e:
+                import traceback
+                print(f"⚠️  Failed to save discrete units: {e}")
+                traceback.print_exc()
+        
         x = {
             "code": torch.tensor(unit, dtype=torch.long, device=self.device).view(
                 1, -1
             ),
         }
-        wav, dur = self.vocoder(x, self.dur_prediction)
+        
+        # Handle dual mode or single mode
+        if self.dual_mode:
+            # Dual mode: generate both outputs
+            vocoder_outputs = self.vocoder(x, self.dur_prediction)
+            wav_original, dur_original = vocoder_outputs['original']
+            wav_modified, dur_modified = vocoder_outputs['modified']
+            
+            # Process original output
+            cur_wav_length_original = dur_original[:, -len(cur_unit) :].sum() * 320
+            new_wav_original = wav_original[-cur_wav_length_original:]
+            if hasattr(self, 'unfinished_wav_original') and self.unfinished_wav_original is not None and len(self.unfinished_wav_original) > 0:
+                new_wav_original = torch.cat((self.unfinished_wav_original, new_wav_original), dim=0)
+            
+            # Process modified output
+            cur_wav_length_modified = dur_modified[:, -len(cur_unit) :].sum() * 320
+            new_wav_modified = wav_modified[-cur_wav_length_modified:]
+            if hasattr(self, 'unfinished_wav_modified') and self.unfinished_wav_modified is not None and len(self.unfinished_wav_modified) > 0:
+                new_wav_modified = torch.cat((self.unfinished_wav_modified, new_wav_modified), dim=0)
+            
+            # Store both outputs
+            self.wav_original = wav_original
+            self.wav_modified = wav_modified
+            self.wav = wav_original  # For compatibility
+            self.unit = unit
+            
+            # Add to global lists
+            global S2ST_ORIGINAL, S2ST_MODIFIED
+            S2ST_ORIGINAL.extend(new_wav_original.tolist())
+            S2ST_MODIFIED.extend(new_wav_modified.tolist())
+            
+            # Also add original to S2ST for backward compatibility
+            S2ST.extend(new_wav_original.tolist())
+            
+            # Use original for return (primary output)
+            new_wav = new_wav_original
+            wav = wav_original
+            dur = dur_original
+        else:
+            # Single mode: original behavior
+            wav, dur = self.vocoder(x, self.dur_prediction)
+            
+            cur_wav_length = dur[:, -len(cur_unit) :].sum() * 320
+            new_wav = wav[-cur_wav_length:]
+            if self.unfinished_wav is not None and len(self.unfinished_wav) > 0:
+                new_wav = torch.cat((self.unfinished_wav, new_wav), dim=0)
+            
+            self.wav = wav
+            self.unit = unit
+            
+            S2ST.extend(new_wav.tolist())
 
-        cur_wav_length = dur[:, -len(cur_unit) :].sum() * 320
-        new_wav = wav[-cur_wav_length:]
-        if self.unfinished_wav is not None and len(self.unfinished_wav) > 0:
-            new_wav = torch.cat((self.unfinished_wav, new_wav), dim=0)
-
-        self.wav = wav
-        self.unit = unit
+        global OFFSET_MS
+        if OFFSET_MS==-1:
+            OFFSET_MS=1000*len(self.states.source)/ORG_SAMPLE_RATE
 
         # A SpeechSegment has to be returned for speech-to-speech translation system
         if self.states.source_finished and new_subword_tokens == -1:
             self.states.target_finished = True
             # self.reset()
-
-        S2ST.extend(new_wav.tolist())
-        global OFFSET_MS
-        if OFFSET_MS==-1:
-            OFFSET_MS=1000*len(self.states.source)/ORG_SAMPLE_RATE
 
         return WriteAction(
             SpeechSegment(
@@ -824,10 +949,55 @@ class StreamSpeechS2STAgent(SpeechToSpeechAgent):
     
 def run(source):
     # if len(S2ST)!=0: return
-    samples, _ = soundfile.read(source, dtype="float32")
+    
+    # Handle MP3 files by converting to WAV first
+    if source.lower().endswith('.mp3'):
+        print(f"Converting MP3 to WAV: {source}")
+        audio = AudioSegment.from_mp3(source)
+        # Create a temporary WAV file
+        wav_path = source.rsplit('.', 1)[0] + '_temp.wav'
+        audio.export(wav_path, format='wav')
+        samples, sr = soundfile.read(wav_path, dtype="float32")
+        # Clean up temp file
+        try:
+            os.remove(wav_path)
+        except:
+            pass
+    else:
+        samples, sr = soundfile.read(source, dtype="float32")
+    
+    # Extract source audio at 16kHz
+    source_filename = os.path.basename(source).split('.')[0]
+    from extract_intermediates import save_source_audio
+    extracted_wav_path = save_source_audio(samples, ORG_SAMPLE_RATE, filename_prefix=source_filename)
+    
+    # Store filename for later use in discrete units extraction
+    agent.current_source_filename = source_filename
+    
+    # Pass extracted 16kHz WAV to vocoder for embedding extraction (modified vocoder only)
+    # This ensures ECAPA and Emotion2Vec get clean, properly formatted audio
+    agent.vocoder.set_source_audio(extracted_wav_path)
+    
+    # Resample to expected sample rate if needed
+    if sr != ORG_SAMPLE_RATE:
+        print(f"Resampling from {sr}Hz to {ORG_SAMPLE_RATE}Hz")
+        # Simple resampling using torch
+        samples_tensor = torch.tensor(samples).unsqueeze(0).unsqueeze(0)  # [1, 1, length]
+        target_length = int(len(samples) * ORG_SAMPLE_RATE / sr)
+        samples_tensor = torch.nn.functional.interpolate(
+            samples_tensor, size=target_length, mode='linear', align_corners=False
+        )
+        samples = samples_tensor.squeeze().numpy()
+    
+    # Normalize input audio to prevent loud playback
+    max_val = np.max(np.abs(samples))
+    if max_val > 0:
+        samples = samples / max_val * 0.8  # Normalize and scale to 80%
+    
     agent.reset()
 
     interval=int(agent.segment_size*(ORG_SAMPLE_RATE/1000))
+    print(f"🔄 Processing with segment_size={agent.segment_size}ms, interval={interval} samples")
     cur_idx=0
     while not agent.states.target_finished:
         cur_idx+=interval
@@ -844,8 +1014,10 @@ def reset():
     ASR={}
     global S2TT
     S2TT={}
-    global S2ST
+    global S2ST, S2ST_ORIGINAL, S2ST_MODIFIED
     S2ST=[]
+    S2ST_ORIGINAL=[]
+    S2ST_MODIFIED=[]
 
 
 def find_largest_key_value(dictionary, N):
@@ -856,31 +1028,132 @@ def find_largest_key_value(dictionary, N):
     return dictionary[largest_key]
 
 def merge_audio(left_audio_path, right_audio_path, offset_ms):
-    # 读取左右声道音频文件
-    left_audio = AudioSegment.from_file(left_audio_path)
-    right_audio = AudioSegment.from_file(right_audio_path)
-
-    right_audio=AudioSegment.silent(duration=offset_ms)+right_audio
-
+    # Use soundfile instead of pydub to avoid ffmpeg dependency
+    left_data, left_sr = soundfile.read(left_audio_path, dtype='float32')
+    right_data, right_sr = soundfile.read(right_audio_path, dtype='float32')
     
-    # 确保两个音频文件具有相同的长度
-    if len(left_audio) > len(right_audio):
-        right_audio += AudioSegment.silent(duration=len(left_audio) - len(right_audio))
-    elif len(left_audio) < len(right_audio):
-        left_audio += AudioSegment.silent(duration=len(right_audio) - len(left_audio))
-
-    # # 将左右声道音频合并
-    # merged_audio = left_audio.overlay(right_audio.pan(1))
-    # # 保存合并后的音频文件
-    # merged_audio.export(output_file, format="wav")
+    # Convert offset from ms to samples
+    offset_samples = int(offset_ms * right_sr / 1000)
     
-    return left_audio,right_audio
+    # Add silence at the beginning of right audio
+    right_data = np.concatenate([np.zeros(offset_samples), right_data])
+    
+    # Ensure both audio files have the same length
+    max_length = max(len(left_data), len(right_data))
+    
+    if len(left_data) < max_length:
+        left_data = np.concatenate([left_data, np.zeros(max_length - len(left_data))])
+    if len(right_data) < max_length:
+        right_data = np.concatenate([right_data, np.zeros(max_length - len(right_data))])
+    
+    # Normalize audio data before creating AudioSegment objects
+    left_max = np.max(np.abs(left_data))
+    if left_max > 0:
+        left_data = left_data / left_max * 0.8
+    
+    right_max = np.max(np.abs(right_data))
+    if right_max > 0:
+        right_data = right_data / right_max * 0.8
+    
+    # Convert to int16 for AudioSegment (standard format)
+    left_data_int16 = (left_data * 32767).astype(np.int16)
+    right_data_int16 = (right_data * 32767).astype(np.int16)
+    
+    # Create AudioSegment objects for compatibility with the rest of the code
+    left_audio = AudioSegment(
+        left_data_int16.tobytes(),
+        frame_rate=left_sr,
+        sample_width=2,  # int16 = 2 bytes
+        channels=1
+    )
+    right_audio = AudioSegment(
+        right_data_int16.tobytes(),
+        frame_rate=right_sr,
+        sample_width=2,  # int16 = 2 bytes
+        channels=1
+    )
+    
+    # Audio normalization is now handled at the source when writing the file
+    
+    return left_audio, right_audio
 
+# Flask routes will be defined after app initialization
+
+# Load main configuration
+with open('config.json', 'r') as f:
+    main_config = json.load(f)
+
+# Load paths configuration
+with open('paths_config.json', 'r') as f:
+    paths_config = json.load(f)
+
+# Merge configurations
+args_dict = main_config.copy()
+if main_config.get('use_paths_config', False):
+    # Determine which vocoder to use
+    vocoder_type = args_dict.get('vocoder-type', 'original')
+    
+    if vocoder_type == 'dual':
+        # Provide both vocoder paths for dual mode
+        vocoder_paths = {
+            'original-vocoder': paths_config['vocoder']['checkpoint'],
+            'original-vocoder-cfg': paths_config['vocoder']['config'],
+            'modified-vocoder': paths_config['modified_vocoder']['checkpoint'],
+            'modified-vocoder-cfg': paths_config['modified_vocoder']['config'],
+            # Default to original for backward compatibility
+            'vocoder': paths_config['vocoder']['checkpoint'],
+            'vocoder-cfg': paths_config['vocoder']['config']
+        }
+    elif vocoder_type == 'modified':
+        vocoder_paths = {
+            'vocoder': paths_config['modified_vocoder']['checkpoint'],
+            'vocoder-cfg': paths_config['modified_vocoder']['config']
+        }
+    else:
+        vocoder_paths = {
+            'vocoder': paths_config['vocoder']['checkpoint'],
+            'vocoder-cfg': paths_config['vocoder']['config']
+        }
+    
+    # Add paths from paths_config.json
+    args_dict.update({
+        'data-bin': paths_config['configs']['data_bin'],
+        'user-dir': paths_config['configs']['user_dir'],
+        'agent-dir': paths_config['configs']['agent_dir'],
+        'model-path': paths_config['models']['simultaneous'],
+        **vocoder_paths
+    })
+
+# Initialize Flask app with config
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'uploads'
+# Set upload folder from paths config
+upload_folder = paths_config.get('demo', {}).get('upload_folder', 'uploads')
+app.config['UPLOAD_FOLDER'] = upload_folder
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
+# Initialize agent
+parser = argparse.ArgumentParser()
+StreamSpeechS2STAgent.add_args(parser)
 
+# Create the list of arguments from args_dict
+args_list = []
+# pdb.set_trace()
+for key, value in args_dict.items():
+    # Skip non-argument fields
+    if key.startswith('_') or key in ['use_paths_config', 'language_pair']:
+        continue
+    if isinstance(value, bool):
+        if value:
+            args_list.append(f'--{key}')
+    else:
+        args_list.append(f'--{key}')
+        args_list.append(str(value))
+
+args = parser.parse_args(args_list)
+
+agent = StreamSpeechS2STAgent(args)
+
+# Define Flask routes
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -895,73 +1168,133 @@ def upload():
     if file:
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
         file.save(filepath)
-        return filepath
+        # Return just the filename, not the full path
+        return file.filename
 
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
+@app.route('/process/<path:filepath>')
+def uploaded_file(filepath):
     latency = request.args.get('latency', default=320, type=int)
+    print(f"📊 Received latency parameter: {latency} ms")
     agent.set_chunk_size(latency)
+    print(f"✅ Agent segment_size updated to: {agent.segment_size} ms")
 
-    path=app.config['UPLOAD_FOLDER']+'/'+filename
+    # Construct full path from upload folder and filename
+    path = os.path.join(app.config['UPLOAD_FOLDER'], filepath)
     # pdb.set_trace()
     # if len(S2ST)==0:
     reset()
     run(path)
-    soundfile.write('/'.join(path.split('/')[:-1])+'/output.'+path.split('/')[-1],S2ST,SAMPLE_RATE)
-    left,right=merge_audio(path, '/'.join(path.split('/')[:-1])+'/output.'+path.split('/')[-1], OFFSET_MS)
-    left.export('/'.join(path.split('/')[:-1])+'/input.'+path.split('/')[-1], format="wav")
-    right.export('/'.join(path.split('/')[:-1])+'/output.'+path.split('/')[-1], format="wav")
+    filename = os.path.basename(path)
+    output_path = os.path.join(os.path.dirname(path), 'output.'+filename)
+    
+    # Check if dual mode is enabled
+    if agent.dual_mode and len(S2ST_ORIGINAL) > 0 and len(S2ST_MODIFIED) > 0:
+        # DUAL MODE: Save both original and modified outputs
+        
+        # Save original vocoder output
+        output_path_original = os.path.join(os.path.dirname(path), 'output_original.'+filename)
+        audio_data_original = np.array(S2ST_ORIGINAL, dtype=np.float32)
+        max_val_original = np.max(np.abs(audio_data_original))
+        if max_val_original > 0:
+            audio_data_original = audio_data_original / max_val_original * 0.8
+        soundfile.write(output_path_original, audio_data_original, SAMPLE_RATE)
+        
+        # Save modified vocoder output
+        output_path_modified = os.path.join(os.path.dirname(path), 'output_modified.'+filename)
+        audio_data_modified = np.array(S2ST_MODIFIED, dtype=np.float32)
+        max_val_modified = np.max(np.abs(audio_data_modified))
+        if max_val_modified > 0:
+            audio_data_modified = audio_data_modified / max_val_modified * 0.8
+        soundfile.write(output_path_modified, audio_data_modified, SAMPLE_RATE)
+        
+        # Also save as default output (use original)
+        soundfile.write(output_path, audio_data_original, SAMPLE_RATE)
+        
+        print(f"✓ DUAL MODE: Saved both outputs")
+        print(f"  - Original: {output_path_original}")
+        print(f"  - Modified: {output_path_modified}")
+    else:
+        # SINGLE MODE: Original behavior
+        # Normalize the audio data to prevent it from being too loud
+        if len(S2ST) > 0:
+            # Convert to numpy array and normalize
+            audio_data = np.array(S2ST, dtype=np.float32)
+            # Normalize to [-1, 1] range
+            max_val = np.max(np.abs(audio_data))
+            if max_val > 0:
+                audio_data = audio_data / max_val * 0.8  # Scale to 80% of max to be safe
+            soundfile.write(output_path, audio_data, SAMPLE_RATE)
+        else:
+            # Create silent audio if no data
+            soundfile.write(output_path, np.zeros(1000), SAMPLE_RATE)
+    
+    left,right=merge_audio(path, output_path, OFFSET_MS)
+    input_path = os.path.join(os.path.dirname(path), 'input.'+filename)
+    left.export(input_path, format="wav")
+    right.export(output_path, format="wav")
     # left=left.split_to_mono()[0]
     # right=right.split_to_mono()[1]
     # pdb.set_trace()
     return send_from_directory(app.config['UPLOAD_FOLDER'], 'input.'+filename)
 
-@app.route('/uploads/output/<filename>')
-def uploaded_output_file(filename):
+@app.route('/output/<path:filepath>')
+def uploaded_output_file(filepath):
+    # filepath is just the filename
+    filename = filepath
     
     return send_from_directory(app.config['UPLOAD_FOLDER'], 'output.'+filename)
 
+@app.route('/output_original/<path:filepath>')
+def uploaded_output_original_file(filepath):
+    # filepath is just the filename
+    filename = filepath
+    
+    return send_from_directory(app.config['UPLOAD_FOLDER'], 'output_original.'+filename)
 
-@app.route('/asr/<float:current_time>', methods=['GET'])
+@app.route('/output_modified/<path:filepath>')
+def uploaded_output_modified_file(filepath):
+    # filepath is just the filename
+    filename = filepath
+    
+    return send_from_directory(app.config['UPLOAD_FOLDER'], 'output_modified.'+filename)
+
+@app.route('/is_dual_mode', methods=['GET'])
+def is_dual_mode():
+    return jsonify(dual_mode=agent.dual_mode)
+
+
+@app.route('/asr/<current_time>', methods=['GET'])
 def asr(current_time):
+    try:
+        current_time = float(current_time)
+    except ValueError:
+        return jsonify(result="")
+    
     # asr_result = f"ABCD... {int(current_time * 1000)}"
     N = current_time*ORG_SAMPLE_RATE
 
     asr_result=find_largest_key_value(ASR, N)
     return jsonify(result=asr_result)
 
-@app.route('/translation/<float:current_time>', methods=['GET'])
+@app.route('/translation/<current_time>', methods=['GET'])
 def translation(current_time):
+    try:
+        current_time = float(current_time)
+    except ValueError:
+        return jsonify(result="")
+    
     N = current_time*ORG_SAMPLE_RATE
 
     translation_result=find_largest_key_value(S2TT, N)
     # translation_result = f"1234... {int(current_time * 1000)}"
     return jsonify(result=translation_result)
 
-with open('/data/zhangshaolei/StreamSpeech/demo/config.json', 'r') as f:
-    args_dict = json.load(f)
-
-# Initialize agent
-parser = argparse.ArgumentParser()
-StreamSpeechS2STAgent.add_args(parser)
-
-# Create the list of arguments from args_dict
-args_list = []
-# pdb.set_trace()
-for key, value in args_dict.items():
-    if isinstance(value, bool):
-        if value:
-            args_list.append(f'--{key}')
-    else:
-        args_list.append(f'--{key}')
-        args_list.append(str(value))
-
-args = parser.parse_args(args_list)
-
-agent = StreamSpeechS2STAgent(args)
-
-
-
+@app.route('/favicon.ico')
+def favicon():
+    # Return a simple 204 No Content response to stop the 404 error
+    return '', 204
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=7860, debug=True)
+    host = paths_config.get('demo', {}).get('host', '0.0.0.0')
+    port = paths_config.get('demo', {}).get('port', 7860)
+    app.run(host=host, port=port, debug=True)

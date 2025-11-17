@@ -1,0 +1,32 @@
+{
+    "_comment": "StreamSpeech Paths Configuration Template",
+    "_instructions": "Copy this file to paths_config.json and update the paths for your environment",
+    "_note": "Use forward slashes (/) for paths, even on Windows",
+    
+    "streamspeech_root": "CHANGE_THIS_TO_YOUR_STREAMSPEECH_PATH",
+    "pretrain_models_root": "CHANGE_THIS_TO_YOUR_PRETRAIN_MODELS_PATH",
+    
+    "language_pair": "es-en",
+    
+    "models": {
+        "simultaneous": "CHANGE_THIS_TO_YOUR_SIMULTANEOUS_MODEL_PATH",
+        "offline": "CHANGE_THIS_TO_YOUR_OFFLINE_MODEL_PATH"
+    },
+    
+    "vocoder": {
+        "checkpoint": "CHANGE_THIS_TO_YOUR_VOCODER_CHECKPOINT_PATH",
+        "config": "CHANGE_THIS_TO_YOUR_VOCODER_CONFIG_PATH"
+    },
+    
+    "configs": {
+        "data_bin": "CHANGE_THIS_TO_YOUR_DATA_BIN_PATH",
+        "user_dir": "CHANGE_THIS_TO_YOUR_USER_DIR_PATH",
+        "agent_dir": "CHANGE_THIS_TO_YOUR_AGENT_DIR_PATH"
+    },
+    
+    "demo": {
+        "upload_folder": "CHANGE_THIS_TO_YOUR_UPLOAD_FOLDER_PATH",
+        "host": "0.0.0.0",
+        "port": 7860
+    }
+}

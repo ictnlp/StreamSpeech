@@ -1,0 +1,15 @@
+# Ignore actual paths configuration (contains local paths)
+paths_config.json
+
+# Ignore uploads directory
+uploads/
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Ignore virtual environment
+streamspeech_env/

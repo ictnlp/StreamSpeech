@@ -59,7 +59,49 @@
         button:hover:not([disabled]) {
             background-color: #45a049;
         }
-        #waveform, #outputWaveform {
+        #playOriginalButton {
+            background-color: #ffa500;
+            padding: 8px 16px;
+        }
+        #playOriginalButton:hover:not([disabled]) {
+            background-color: #cc8400;
+        }
+        #playModifiedButton {
+            background-color: #800080;
+            padding: 8px 16px;
+        }
+        #playModifiedButton:hover:not([disabled]) {
+            background-color: #600060;
+        }
+        #playBothButton {
+            background-color: #70b027;
+            padding: 8px 16px;
+        }
+        #playBothButton:hover:not([disabled]) {
+            background-color: #5a8d1f;
+        }
+        #playSourceOriginalButton {
+            background-color: #ffa500;
+            padding: 8px 16px;
+        }
+        #playSourceOriginalButton:hover:not([disabled]) {
+            background-color: #cc8400;
+        }
+        #playSourceModifiedButton {
+            background-color: #800080;
+            padding: 8px 16px;
+        }
+        #playSourceModifiedButton:hover:not([disabled]) {
+            background-color: #600060;
+        }
+        #playSourceButton {
+            background-color: blue;
+            padding: 8px 16px;
+        }
+        #playSourceButton:hover:not([disabled]) {
+            background-color: #0000cc;
+        }
+        #waveform, #outputWaveform, #outputWaveformModified {
             margin: 10px 0; /* Reduced the margin */
             border: 1px solid #ddd;
             border-radius: 5px;
@@ -156,17 +198,10 @@
 <body>
     <div class="container">
         <div class="title-container">
-            <div class="tag-sticker"> ACL 2024 </div>
+            <div class="tag-sticker"> MODIFIED </div>
             <h1>StreamSpeech: Simultaneous Speech-to-Speech Translation with Multi-task Learning</h1>
         </div>
-        <p><strong>Authors</strong>: Shaolei Zhang, Qingkai Fang, Shoutao Guo, Zhengrui Ma, Min Zhang, Yang Feng*</p>
-        <h4>💡<strong>StreamSpeech</strong> is an <font color="red">"All in One" seamless model</font> for offline and simultaneous speech recognition, speech translation and speech synthesis under any latency.</h4>
-        <div class="badges">
-            <a href="https://arxiv.org/abs/2406.03049"><img src="https://img.shields.io/badge/arXiv-2406.03049-b31b1b.svg?logo=arXiv" alt="arXiv"></a>
-            <a href="https://ictnlp.github.io/StreamSpeech-site/"><img src="https://img.shields.io/badge/%F0%9F%8E%A7%20Demo-Listen%20to%20StreamSpeech-orange.svg" alt="Demo"></a>
-            <a href="https://huggingface.co/ICTNLP/StreamSpeech_Models/tree/main"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20-StreamSpeech_Models-blue.svg" alt="StreamSpeech Models"></a>
-            <a href="https://github.com/ictnlp/StreamSpeech"><img src="https://img.shields.io/github/stars/ictnlp/StreamSpeech?style=social&label=GitHub+Repo" alt="Visitors"></a>
-        </div>
+        <br>
         <form id="uploadForm">
             <div class="slider-container">
                 <label for="latencySlider">Latency (ms): </label>
@@ -177,11 +212,15 @@
             <button type="submit" id="uploadButton" disabled>Upload</button>
         </form>
         <div class="streaming-inputs">
-            <h2>Streaming Inputs</h2>
+            <h2>Source Audio (Spanish)</h2>
             <div id="waveform"></div>
-            <button id="playButton" disabled>▶Play/Pause</button>
+            <div style="margin-top: 10px;">
+                <button id="playSourceButton" disabled style="background-color: blue; padding: 8px 16px;">▶ Play Source</button>
+                <button id="playBothButton" disabled style="background-color: #70b027; padding: 8px 16px; margin-left: 10px;">▶ Play Both Outputs</button>
+                <button id="playSourceOriginalButton" disabled style="background-color: #ffa500; padding: 8px 16px; margin-left: 10px;">▶ Play Source + Original</button>
+                <button id="playSourceModifiedButton" disabled style="background-color: #800080; padding: 8px 16px; margin-left: 10px;">▶ Play Source + Modified</button>
+            </div>
         </div>
-        <br><br>
         <div class="results">
             <h2 class="result-title">Streaming Speech Recognition<br></h2>
             <div id="asrResult" class="result-content"><br></div> <!-- Ensure empty line initially -->
@@ -191,15 +230,43 @@
             <div id="translationResult" class="result-content2"><br></div> <!-- Ensure empty line initially -->
         </div>
         <div class="results">
-            <h2 class="result-title">Simultaneous Speech-to-Speech Translation</h2>
+            <h2 class="result-title">Output: Original Vocoder (Standard English)</h2>
             <div id="outputWaveform"></div>
+            <button id="playOriginalButton" disabled style="background-color: #ffa500; margin-top: 10px;">▶ Play Original Vocoder</button>
+        </div>
+        <div class="results" id="modifiedVocoderSection">
+            <h2 class="result-title">Output: Modified Vocoder (Voice Transfer - English with Spanish Voice)</h2>
+            <div id="outputWaveformModified"></div>
+            <button id="playModifiedButton" disabled style="background-color: #800080; margin-top: 10px;">▶ Play Modified Vocoder</button>
         </div>
     </div>
 
     <script>
-        var inputWaveSurfer, outputWaveSurfer;
+        // Create AudioContext with explicit 16kHz sample rate to match server output
+        // This prevents browser from using default 48kHz which causes 3x speed-up
+        var audioContext;
+        try {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                sampleRate: 16000  // CRITICAL: Match the server's SAMPLE_RATE
+            });
+            console.log('✓ AudioContext created at ' + audioContext.sampleRate + ' Hz');
+        } catch (e) {
+            console.error('Failed to create AudioContext with 16kHz:', e);
+            // Fallback to default context (may cause speed issues)
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            console.warn('⚠ Using default AudioContext at ' + audioContext.sampleRate + ' Hz - audio may be sped up');
+        }
+        
+        var inputWaveSurfer, outputWaveSurfer, outputWaveSurferModified;
         var asrInterval, translationInterval;
-        var playButton = document.getElementById('playButton');
+        var playSourceButton = document.getElementById('playSourceButton');
+        var playOriginalButton = document.getElementById('playOriginalButton');
+        var playModifiedButton = document.getElementById('playModifiedButton');
+        var playBothButton = document.getElementById('playBothButton');
+        var playSourceOriginalButton = document.getElementById('playSourceOriginalButton');
+        var playSourceModifiedButton = document.getElementById('playSourceModifiedButton');
+        var lastPlaybackTime = 0;
+        var stuckCounter = 0;
 
         // Listen for changes in the file input
         document.getElementById('fileInput').addEventListener('change', function() {
@@ -222,6 +289,7 @@
 
             // Get the latency value
             var latency = document.getElementById('latencySlider').value;
+            console.log('📊 Latency value selected:', latency, 'ms');
 
             fetch('/upload', {
                 method: 'POST',
@@ -238,74 +306,178 @@
                 if (outputWaveSurfer) {
                     outputWaveSurfer.destroy();
                 }
+                if (outputWaveSurferModified) {
+                    outputWaveSurferModified.destroy();
+                }
 
                 inputWaveSurfer = WaveSurfer.create({
                     container: '#waveform',
                     waveColor: '#ffffff',
                     progressColor: 'blue',
-                    normalize: true, // Add normalize to input waveform
-                    // barWidth:1.0,
-                    splitChannels: true, // Split channels for left and right output
-                    channel: 'left', // Left channel for inputWaveSurfer
-                    progressClass: 'wave-progress' /* Custom class for progress line */
-                    
+                    normalize: true,
+                    progressClass: 'wave-progress',
+                    interact: false,  // Disable seeking by clicking
+                    loop: false,      // Disable looping
+                    audioContext: audioContext  // Use 16kHz context
                 });
 
                 inputWaveSurfer.on('ready', function() {
-                    outputWaveSurfer = WaveSurfer.create({
-                        container: '#outputWaveform',
-                        waveColor: '#f9f9f9', // Audio Result: blue color
-                        progressColor: 'orange', // Blue progress color
-                        // barWidth:1.0,
-                        splitChannels: true, // Split channels for left and right output
-                        channel: 'right', // Left channel for inputWaveSurfer
-                        normalize: true // Add normalize to output waveform
-                    });
+                    // Check if dual mode is enabled
+                    fetch('/is_dual_mode')
+                        .then(response => response.json())
+                        .then(data => {
+                            const isDualMode = data.dual_mode;
+                            
+                            // Create original output WaveSurfer
+                            outputWaveSurfer = WaveSurfer.create({
+                                container: '#outputWaveform',
+                                waveColor: '#f9f9f9',
+                                progressColor: 'orange',
+                                normalize: true,
+                                loop: false,  // Disable looping
+                                audioContext: audioContext  // Use 16kHz context
+                            });
 
-                    outputWaveSurfer.load(`/uploads/output/${filename}`);
+                            if (isDualMode) {
+                                // DUAL MODE: Load both outputs
+                                console.log("Dual mode detected - loading both vocoders");
+                                
+                                // Update title for original output
+                                document.querySelector('.results:nth-of-type(3) .result-title').innerText = 
+                                    'Simultaneous Speech-to-Speech Translation (Original Vocoder)';
+                                
+                                // Load original vocoder output
+                                outputWaveSurfer.load(`/output_original/${filename}`);
+                                
+                                // Create Modified Vocoder output WaveSurfer
+                                outputWaveSurferModified = WaveSurfer.create({
+                                    container: '#outputWaveformModified',
+                                    waveColor: '#f9f9f9',
+                                    progressColor: 'purple',
+                                    normalize: true,
+                                    loop: false,  // Disable looping
+                                    audioContext: audioContext  // Use 16kHz context
+                                });
+                                
+                                // Load modified vocoder output
+                                outputWaveSurferModified.load(`/output_modified/${filename}`);
+                                
+                                playModifiedButton.disabled = false;
+                                playModifiedButton.style.backgroundColor = '#800080';
+                            } else {
+                                // SINGLE MODE: Load only one output
+                                console.log("Single mode - loading default vocoder");
+                                
+                                // Load default output
+                                outputWaveSurfer.load(`/output/${filename}`);
+                                
+                                playModifiedButton.disabled = true;
+                                playModifiedButton.style.backgroundColor = '#ddd';
+                            }
 
-                    playButton.disabled = false;
-                    playButton.style.backgroundColor = '#4CAF50'; // Change color to green
+                            playSourceButton.disabled = false;
+                            playSourceButton.style.backgroundColor = 'blue';
+                            
+                            playOriginalButton.disabled = false;
+                            playOriginalButton.style.backgroundColor = '#ffa500';
+                            
+                            playSourceOriginalButton.disabled = false;
+                            playSourceOriginalButton.style.backgroundColor = '#ffa500';
 
-                    // Ensure old event listeners are removed before adding new ones
-                    playButton.removeEventListener('click', playPauseHandler);
-                    playButton.addEventListener('click', playPauseHandler);
-
-                    inputWaveSurfer.on('play', function() {
-                        outputWaveSurfer.play();
-                        outputWaveSurfer.seekTo(inputWaveSurfer.getCurrentTime() / inputWaveSurfer.getDuration());
-
-                        updateASRResult(inputWaveSurfer.getCurrentTime());
-                        updateTranslationResult(inputWaveSurfer.getCurrentTime());
-
-                        asrInterval = setInterval(function() {
-                            updateASRResult(inputWaveSurfer.getCurrentTime());
-                        }, 320);
-
-                        translationInterval = setInterval(function() {
-                            updateTranslationResult(inputWaveSurfer.getCurrentTime());
-                        }, 320);
-                    });
-
-                    inputWaveSurfer.on('pause', function() {
-                        outputWaveSurfer.pause();
-                        clearInterval(asrInterval);
-                        clearInterval(translationInterval);
-                    });
-
-                    inputWaveSurfer.on('seek', function() {
-                        var seekTime = inputWaveSurfer.getCurrentTime() / inputWaveSurfer.getDuration();
-                        outputWaveSurfer.seekTo(seekTime);
-                    });
-
-                    inputWaveSurfer.on('finish', function() {
-                        updateASRResult(inputWaveSurfer.getCurrentTime());
-                        updateTranslationResult(inputWaveSurfer.getCurrentTime());
-                    });
+                            // Ensure old event listeners are removed before adding new ones
+                            playSourceButton.removeEventListener('click', playSourceHandler);
+                            playSourceButton.addEventListener('click', playSourceHandler);
+                            
+                            playOriginalButton.removeEventListener('click', playOriginalHandler);
+                            playOriginalButton.addEventListener('click', playOriginalHandler);
+                            
+                            playSourceOriginalButton.removeEventListener('click', playSourceOriginalHandler);
+                            playSourceOriginalButton.addEventListener('click', playSourceOriginalHandler);
+                            
+                            if (isDualMode) {
+                                playModifiedButton.removeEventListener('click', playModifiedHandler);
+                                playModifiedButton.addEventListener('click', playModifiedHandler);
+                                
+                                playBothButton.disabled = false;
+                                playBothButton.style.backgroundColor = '#70b027';
+                                playBothButton.removeEventListener('click', playBothHandler);
+                                playBothButton.addEventListener('click', playBothHandler);
+                                
+                                playSourceModifiedButton.disabled = false;
+                                playSourceModifiedButton.style.backgroundColor = '#800080';
+                                playSourceModifiedButton.removeEventListener('click', playSourceModifiedHandler);
+                                playSourceModifiedButton.addEventListener('click', playSourceModifiedHandler);
+                            }
+                            
+                            // Add finish and pause event handlers INSIDE the async callback
+                            // This ensures WaveSurfer instances are fully created
+                            outputWaveSurfer.on('finish', function() {
+                                console.log("Original output finished");
+                                // Reset ALL button states that might be using this audio
+                                playOriginalButton.innerHTML = '▶ Play Original Vocoder';
+                                playBothButton.innerHTML = '▶ Play Both Outputs';
+                                playSourceOriginalButton.innerHTML = '▶ Play Source + Original';
+                                clearInterval(asrInterval);
+                                clearInterval(translationInterval);
+                                asrInterval = null;
+                                translationInterval = null;
+                            });
+                            
+                            outputWaveSurfer.on('pause', function() {
+                                console.log("Original output paused");
+                                clearInterval(asrInterval);
+                                clearInterval(translationInterval);
+                                asrInterval = null;
+                                translationInterval = null;
+                            });
+                            
+                            if (isDualMode && outputWaveSurferModified) {
+                                outputWaveSurferModified.on('finish', function() {
+                                    console.log("Modified output finished");
+                                    // Reset ALL button states that might be using this audio
+                                    playModifiedButton.innerHTML = '▶ Play Modified Vocoder';
+                                    playBothButton.innerHTML = '▶ Play Both Outputs';
+                                    playSourceModifiedButton.innerHTML = '▶ Play Source + Modified';
+                                    clearInterval(asrInterval);
+                                    clearInterval(translationInterval);
+                                    asrInterval = null;
+                                    translationInterval = null;
+                                });
+                                
+                                outputWaveSurferModified.on('pause', function() {
+                                    console.log("Modified output paused");
+                                    clearInterval(asrInterval);
+                                    clearInterval(translationInterval);
+                                    asrInterval = null;
+                                    translationInterval = null;
+                                });
+                            }
+                            
+                            inputWaveSurfer.on('pause', function() {
+                                console.log("Input paused");
+                                clearInterval(asrInterval);
+                                clearInterval(translationInterval);
+                                asrInterval = null;
+                                translationInterval = null;
+                            });
+                            
+                            inputWaveSurfer.on('finish', function() {
+                                console.log("Input finished");
+                                // Reset ALL button states that might be using this audio
+                                playSourceButton.innerHTML = '▶ Play Source';
+                                playSourceOriginalButton.innerHTML = '▶ Play Source + Original';
+                                playSourceModifiedButton.innerHTML = '▶ Play Source + Modified';
+                                clearInterval(asrInterval);
+                                clearInterval(translationInterval);
+                                asrInterval = null;
+                                translationInterval = null;
+                            });
+                        });
                 });
 
                 // Pass the latency parameter to the server
-                inputWaveSurfer.load(`/uploads/${filename}?latency=${latency}`);
+                console.log('🌐 Requesting processing with URL:', `/process/${filename}?latency=${latency}`);
+                inputWaveSurfer.load(`/process/${filename}?latency=${latency}`);
             })
             .catch(error => console.error('Error:', error));
         });
@@ -314,6 +486,7 @@
             document.getElementById('asrResult').innerText = ''; // Clear ASR result and preserve empty line
             document.getElementById('translationResult').innerText = ''; // Clear translation result and preserve empty line
             document.getElementById('outputWaveform').innerHTML = ''; // Clear output waveform
+            document.getElementById('outputWaveformModified').innerHTML = ''; // Clear Modified Vocoder output waveform
             document.getElementById('waveform').innerHTML = ''; // Clear input waveform
             if (inputWaveSurfer) {
                 inputWaveSurfer.destroy();
@@ -323,18 +496,249 @@
                 outputWaveSurfer.destroy();
                 outputWaveSurfer = null;
             }
+            if (outputWaveSurferModified) {
+                outputWaveSurferModified.destroy();
+                outputWaveSurferModified = null;
+            }
         }
 
-        function playPauseHandler() {
+        function playSourceHandler() {
+            // Play/pause only the source audio
             if (inputWaveSurfer) {
-                inputWaveSurfer.playPause();
+                if (inputWaveSurfer.isPlaying()) {
+                    inputWaveSurfer.pause();
+                    playSourceButton.innerHTML = '▶ Play Source';
+                    clearInterval(asrInterval);
+                    clearInterval(translationInterval);
+                    asrInterval = null;
+                    translationInterval = null;
+                } else {
+                    // Clear any existing intervals first
+                    if (asrInterval) clearInterval(asrInterval);
+                    if (translationInterval) clearInterval(translationInterval);
+                    
+                    inputWaveSurfer.play();
+                    playSourceButton.innerHTML = '⏸ Pause Source';
+                    
+                    // Update ASR and translation results
+                    updateASRResult(inputWaveSurfer.getCurrentTime());
+                    updateTranslationResult(inputWaveSurfer.getCurrentTime());
+
+                    asrInterval = setInterval(function() {
+                        updateASRResult(inputWaveSurfer.getCurrentTime());
+                    }, 1000);  // Update every 1 second to reduce terminal spam
+
+                    translationInterval = setInterval(function() {
+                        updateTranslationResult(inputWaveSurfer.getCurrentTime());
+                    }, 1000);  // Update every 1 second to reduce terminal spam
+                }
             }
+        }
+
+        function playOriginalHandler() {
+            // Play/pause only the original vocoder output
             if (outputWaveSurfer) {
-                outputWaveSurfer.playPause();
+                if (outputWaveSurfer.isPlaying()) {
+                    outputWaveSurfer.pause();
+                    playOriginalButton.innerHTML = '▶ Play Original Vocoder';
+                    clearInterval(asrInterval);
+                    clearInterval(translationInterval);
+                    asrInterval = null;
+                    translationInterval = null;
+                } else {
+                    // Clear any existing intervals first
+                    if (asrInterval) clearInterval(asrInterval);
+                    if (translationInterval) clearInterval(translationInterval);
+                    
+                    outputWaveSurfer.play();
+                    playOriginalButton.innerHTML = '⏸ Pause Original Vocoder';
+                    
+                    // Update ASR and translation results
+                    updateASRResult(outputWaveSurfer.getCurrentTime());
+                    updateTranslationResult(outputWaveSurfer.getCurrentTime());
+
+                    asrInterval = setInterval(function() {
+                        updateASRResult(outputWaveSurfer.getCurrentTime());
+                    }, 1000);  // Update every 1 second to reduce terminal spam
+
+                    translationInterval = setInterval(function() {
+                        updateTranslationResult(outputWaveSurfer.getCurrentTime());
+                    }, 1000);  // Update every 1 second to reduce terminal spam
+                }
             }
+        }
+
+        function playModifiedHandler() {
+            // Play/pause only the modified vocoder output
+            if (outputWaveSurferModified) {
+                if (outputWaveSurferModified.isPlaying()) {
+                    outputWaveSurferModified.pause();
+                    playModifiedButton.innerHTML = '▶ Play Modified Vocoder';
+                    clearInterval(asrInterval);
+                    clearInterval(translationInterval);
+                    asrInterval = null;
+                    translationInterval = null;
+                } else {
+                    // Clear any existing intervals first
+                    if (asrInterval) clearInterval(asrInterval);
+                    if (translationInterval) clearInterval(translationInterval);
+                    
+                    outputWaveSurferModified.play();
+                    playModifiedButton.innerHTML = '⏸ Pause Modified Vocoder';
+                    
+                    // Update ASR and translation results
+                    updateASRResult(outputWaveSurferModified.getCurrentTime());
+                    updateTranslationResult(outputWaveSurferModified.getCurrentTime());
+
+                    asrInterval = setInterval(function() {
+                        updateASRResult(outputWaveSurferModified.getCurrentTime());
+                    }, 1000);  // Update every 1 second to reduce terminal spam
+
+                    translationInterval = setInterval(function() {
+                        updateTranslationResult(outputWaveSurferModified.getCurrentTime());
+                    }, 1000);  // Update every 1 second to reduce terminal spam
+                }
+            }
+        }
+
+        function playBothHandler() {
+            // Play/pause both output vocoders simultaneously
+            if (outputWaveSurfer && outputWaveSurferModified) {
+                var isPlaying = outputWaveSurfer.isPlaying() || outputWaveSurferModified.isPlaying();
+                
+                if (isPlaying) {
+                    outputWaveSurfer.pause();
+                    outputWaveSurferModified.pause();
+                    playBothButton.innerHTML = '▶ Play Both Outputs';
+                    clearInterval(asrInterval);
+                    clearInterval(translationInterval);
+                    asrInterval = null;
+                    translationInterval = null;
+                } else {
+                    // Clear any existing intervals first
+                    if (asrInterval) clearInterval(asrInterval);
+                    if (translationInterval) clearInterval(translationInterval);
+                    
+                    outputWaveSurfer.play();
+                    outputWaveSurferModified.play();
+                    playBothButton.innerHTML = '⏸ Pause Both Outputs';
+                    
+                    // Update ASR and translation results (use original vocoder timing)
+                    updateASRResult(outputWaveSurfer.getCurrentTime());
+                    updateTranslationResult(outputWaveSurfer.getCurrentTime());
+
+                    asrInterval = setInterval(function() {
+                        updateASRResult(outputWaveSurfer.getCurrentTime());
+                    }, 1000);  // Update every 1 second to reduce terminal spam
+
+                    translationInterval = setInterval(function() {
+                        updateTranslationResult(outputWaveSurfer.getCurrentTime());
+                    }, 1000);  // Update every 1 second to reduce terminal spam
+                }
+            }
+        }
+
+        function playSourceOriginalHandler() {
+            // Play/pause source audio + original vocoder simultaneously
+            if (inputWaveSurfer && outputWaveSurfer) {
+                var isPlaying = inputWaveSurfer.isPlaying() || outputWaveSurfer.isPlaying();
+                
+                if (isPlaying) {
+                    inputWaveSurfer.pause();
+                    outputWaveSurfer.pause();
+                    playSourceOriginalButton.innerHTML = '▶ Play Source + Original';
+                    clearInterval(asrInterval);
+                    clearInterval(translationInterval);
+                    asrInterval = null;
+                    translationInterval = null;
+                } else {
+                    // Clear any existing intervals first
+                    if (asrInterval) clearInterval(asrInterval);
+                    if (translationInterval) clearInterval(translationInterval);
+                    
+                    // Synchronize both waveforms
+                    inputWaveSurfer.play();
+                    outputWaveSurfer.play();
+                    playSourceOriginalButton.innerHTML = '⏸ Pause Source + Original';
+                    
+                    // Update ASR and translation results
+                    updateASRResult(inputWaveSurfer.getCurrentTime());
+                    updateTranslationResult(inputWaveSurfer.getCurrentTime());
+
+                    asrInterval = setInterval(function() {
+                        updateASRResult(inputWaveSurfer.getCurrentTime());
+                    }, 1000);  // Update every 1 second to reduce terminal spam
+
+                    translationInterval = setInterval(function() {
+                        updateTranslationResult(inputWaveSurfer.getCurrentTime());
+                    }, 1000);  // Update every 1 second to reduce terminal spam
+                }
+            }
+        }
+
+        function playSourceModifiedHandler() {
+            // Play/pause source audio + modified vocoder simultaneously
+            if (inputWaveSurfer && outputWaveSurferModified) {
+                var isPlaying = inputWaveSurfer.isPlaying() || outputWaveSurferModified.isPlaying();
+                
+                if (isPlaying) {
+                    inputWaveSurfer.pause();
+                    outputWaveSurferModified.pause();
+                    playSourceModifiedButton.innerHTML = '▶ Play Source + Modified';
+                    clearInterval(asrInterval);
+                    clearInterval(translationInterval);
+                    asrInterval = null;
+                    translationInterval = null;
+                } else {
+                    // Clear any existing intervals first
+                    if (asrInterval) clearInterval(asrInterval);
+                    if (translationInterval) clearInterval(translationInterval);
+                    
+                    // Synchronize both waveforms
+                    inputWaveSurfer.play();
+                    outputWaveSurferModified.play();
+                    playSourceModifiedButton.innerHTML = '⏸ Pause Source + Modified';
+                    
+                    // Update ASR and translation results
+                    updateASRResult(inputWaveSurfer.getCurrentTime());
+                    updateTranslationResult(inputWaveSurfer.getCurrentTime());
+
+                    asrInterval = setInterval(function() {
+                        updateASRResult(inputWaveSurfer.getCurrentTime());
+                    }, 1000);  // Update every 1 second to reduce terminal spam
+
+                    translationInterval = setInterval(function() {
+                        updateTranslationResult(inputWaveSurfer.getCurrentTime());
+                    }, 1000);  // Update every 1 second to reduce terminal spam
+                }
+            }
+        }
+
+        function checkIfStuck(currentTime) {
+            // Check if playback time hasn't changed (stuck/finished)
+            if (Math.abs(currentTime - lastPlaybackTime) < 0.01) {
+                stuckCounter++;
+                if (stuckCounter >= 3) {
+                    // Audio has been stuck for 3 intervals - force stop
+                    console.log("Audio playback stuck at " + currentTime + ", clearing intervals");
+                    clearInterval(asrInterval);
+                    clearInterval(translationInterval);
+                    asrInterval = null;
+                    translationInterval = null;
+                    stuckCounter = 0;
+                    lastPlaybackTime = 0;
+                    return true;
+                }
+            } else {
+                stuckCounter = 0;
+            }
+            lastPlaybackTime = currentTime;
+            return false;
         }
 
         function updateASRResult(currentTime) {
+            if (checkIfStuck(currentTime)) return;
+            
             fetch(`/asr/${currentTime}`)
                 .then(response => response.json())
                 .then(data => {

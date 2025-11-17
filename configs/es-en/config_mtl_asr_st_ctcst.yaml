@@ -1,7 +1,7 @@
 target_unigram:
    decoder_type: transformer
-   dict: /data/zhangshaolei/StreamSpeech/configs/es-en/tgt_unigram6000/spm_unigram_es.txt
-   data: /data/zhangshaolei/StreamSpeech/configs/es-en/tgt_unigram6000
+   dict: D:/StreamSpeech/configs/es-en/tgt_unigram6000/spm_unigram_es.txt
+   data: D:/StreamSpeech/configs/es-en/tgt_unigram6000
    loss_weight: 8.0
    rdrop_alpha: 0.0
    decoder_args:
@@ -12,8 +12,8 @@ target_unigram:
    label_smoothing: 0.1
 source_unigram:
    decoder_type: ctc
-   dict: /data/zhangshaolei/StreamSpeech/configs/es-en/src_unigram6000/spm_unigram_es.txt
-   data: /data/zhangshaolei/StreamSpeech/configs/es-en/src_unigram6000
+   dict: D:/StreamSpeech/configs/es-en/src_unigram6000/spm_unigram_es.txt
+   data: D:/StreamSpeech/configs/es-en/src_unigram6000
    loss_weight: 4.0
    rdrop_alpha: 0.0
    decoder_args:
@@ -24,8 +24,8 @@ source_unigram:
    label_smoothing: 0.1
 ctc_target_unigram:
    decoder_type: ctc
-   dict: /data/zhangshaolei/StreamSpeech/configs/es-en/tgt_unigram6000/spm_unigram_es.txt
-   data: /data/zhangshaolei/StreamSpeech/configs/es-en/tgt_unigram6000
+   dict: D:/StreamSpeech/configs/es-en/tgt_unigram6000/spm_unigram_es.txt
+   data: D:/StreamSpeech/configs/es-en/tgt_unigram6000
    loss_weight: 4.0
    rdrop_alpha: 0.0
    decoder_args:
